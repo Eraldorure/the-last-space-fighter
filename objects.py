@@ -1,27 +1,6 @@
-import math
 import pyxel as px
 
-
-def lerp(a, b, t):
-    """Fonction d'interpolation linéaire entre deux nombres."""
-    return a * (1 - t) + b * t
-
-
-def lerp_pts(xa, ya, xb, yb, t):
-    """Fonction d'interpolation linéaire entre deux points."""
-    return int(lerp(xa, xb, t)), int(lerp(ya, yb, t))
-
-
-def t_step(xa, ya, xb, yb):
-    """Permet de calculer le pas de t (c'est-à-dire la valeur par laquelle il faut incrémenter t)."""
-    return 1 / px.sqrt((xb - xa) ** 2 + (yb - ya) ** 2)
-
-
-def enemy_amount(wave):
-    """Permet d'indiquer le nombre d'ennemis à envoyer par vague."""
-    return {"small": 2 * wave,
-            "normal": int(math.log(wave)),
-            "big": 0 if wave < 10 else int(px.sqrt(wave - 9))}
+import functions as func
 
 
 class Hitbox:
@@ -114,19 +93,39 @@ class Enemy:
 
 class Bullet:
     def __init__(self, colors, position, x, y):
-        self.couleurs = colors
+        self.x = x
+        self.y = y
         self.pos = position
-        self.xy = (x, y)
-        self.pas = t_step(*self.pos, *self.xy)
         self.t = 0
+        self.couleurs = colors
+        self.pas = func.t_step(*self.pos, x, y)
         self.hb = Hitbox(x, y, 1, 1)
 
-    def deplacement(self):
+    def move(self):
         try:
-            self.pos = lerp_pts(*self.pos, *self.xy, self.t)
+            self.pos = func.lerp_pts(*self.pos, self.x, self.y, self.t)
         except OverflowError:
             self.pos = 0, 0
         self.t += self.pas
 
     def draw(self):
         px.rect(*self.pos, 1, 1, self.couleurs)
+
+
+class Player:
+    def __init__(self, start_x: int, start_y: int, hp: int = 3):
+        self.x = start_x
+        self.y = start_y
+        self.hp = hp
+
+    def move_up(self, step: int = 1):
+        self.y += step
+
+    def move_down(self, step: int = 1):
+        self.y -= step
+
+    def move_left(self, step: int):
+        self.x -= step
+
+    def move_right(self, step: int = 1):
+        self.x += step
