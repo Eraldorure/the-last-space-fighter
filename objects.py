@@ -22,15 +22,19 @@ class Hitbox:
         return self.is_inside(*co)
 
     def __and__(self, other):
-        """Renvoie un booléen indiquant si deux hitboxs se chevauchent.
+        """Renvoie un booléen indiquant si deux hitboxes se chevauchent.
         S'utilise comme suit : 'hitbox1 & hitbox2'."""
         dx = abs(self.x - other.x)
         dy = abs(self.y - other.y)
-        return (dx <= self.w or dx <= other.w) and (dy <= self.h or dy <= other.w)
+        return (dx < self.w or dx < other.w) and (dy < self.h or dy < other.w)
 
     def is_inside(self, x, y):
         """Indique si deux coordonnées x et y se situent à l'intérieur de la hitbox."""
         return self.x <= x <= self.x + self.w and self.y <= y <= self.y + self.h
+
+    def draw(self, col):
+        """Méthode permettant de dessiner la hitbox. À n'utiliser qu'à des fins de débug."""
+        px.rect(self.x, self.y, self.w, self.h, col)
 
 
 class Button:
@@ -73,43 +77,58 @@ class Enemy:
             raise ValueError(f"unknown model '{model}', you must choose between between {', '.join(self.MODELS.keys())}")
         self.x = x
         self.y = y
-        self.attr = self.MODELS[model]
-        self.w, self.h = self.attr["size"]
-        self.hp = self.attr["hp"]
-        self.__half = self.hp // 2 + 1
+        self.__attr = self.MODELS[model]
+        self.w, self.h = self.__attr["size"]
+        self.hp = self.__attr["hp"]
+        self.__half_hp = self.hp // 2 + 1
         self.hb = Hitbox(x, y, self.w, self.h)
 
     def draw(self):
         """Dessine les ennemis. Leur design change en fonction de leur vie."""
-        if self.hp < self.__half:
-            px.blt(self.x, self.y, 0, *self.attr["full"], self.w, self.h)
+        if self.is_injured:
+            px.blt(self.x, self.y, 0, *self.__attr["full"], self.w, self.h, 0)
         else:
-            px.blt(self.x, self.y, 0, *self.attr["low"], self.w, self.h)
+            px.blt(self.x, self.y, 0, *self.__attr["low"], self.w, self.h, 0)
 
-    MODELS = {"small": {"hp": 2, "size": (10, 10), "full": (20, 0), "low": (32, 0)},
+    def harm(self, dmg: int):
+        """Permet d'infliger des dégâts à l'ennemi.
+        Modifie automatiquement les attributs 'dead' et 'injured'."""
+        self.hp -= dmg
+
+    @property
+    def is_injured(self):
+        return self.hp < self.__half_hp
+
+    @property
+    def is_dead(self):
+        return self.hp < 1
+
+    MODELS = {"small": {"hp": 2, "size": (11, 11), "full": (20, 0), "low": (32, 0)},
               "normal": {"hp": 8, "size": (16, 16), "full": (44, 0), "low": (60, 0)},
               "big": {"hp": 32, "size": (48, 48), "full": (102, 0), "low": (151, 0)}}
 
 
 class Bullet:
-    def __init__(self, colors, position, x, y):
+    def __init__(self, colors, x, y, dir_x, dir_y):
+        self.origin = x, y
         self.x = x
         self.y = y
-        self.pos = position
+        self.dx = dir_x
+        self.dy = dir_y
         self.t = 0
         self.couleurs = colors
-        self.pas = func.t_step(*self.pos, x, y)
+        self.step = func.t_step(x, y, dir_x, dir_y)
         self.hb = Hitbox(x, y, 1, 1)
 
     def move(self):
         try:
-            self.pos = func.lerp_pts(*self.pos, self.x, self.y, self.t)
+            self.x, self.y = func.lerp_pts(*self.origin, self.dx, self.dy, self.t)
         except OverflowError:
-            self.pos = 0, 0
-        self.t += self.pas
+            self.x, self.y = 0, 0
+        self.t += self.step
 
     def draw(self):
-        px.rect(*self.pos, 1, 1, self.couleurs)
+        px.rect(self.x, self.y, 1, 1, self.couleurs)
 
 
 class Player:
@@ -119,12 +138,12 @@ class Player:
         self.hp = hp
 
     def move_up(self, step: int = 1):
-        self.y += step
-
-    def move_down(self, step: int = 1):
         self.y -= step
 
-    def move_left(self, step: int):
+    def move_down(self, step: int = 1):
+        self.y += step
+
+    def move_left(self, step: int = 1):
         self.x -= step
 
     def move_right(self, step: int = 1):

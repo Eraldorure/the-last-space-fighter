@@ -39,20 +39,20 @@ class Game:
             if px.btn(px.KEY_D) or px.btn(px.KEY_RIGHT):
                 self.move(1)
             if px.btnp(px.MOUSE_BUTTON_LEFT, repeat=5):
-                self.bullets.append(obj.Bullet(px.frame_count % 4 + 3, [self.hb.x, self.hb.y], px.mouse_x, px.mouse_y))
+                self.bullets.append(obj.Bullet(px.frame_count % 4 + 3, self.hb.x, self.hb.y, px.mouse_x, px.mouse_y))
 
     def draw_bullet(self):
         for tir in self.bullets:
             tir.move()
             tir.draw()
-        j = 0
-        while j < len(self.bullets):
-            if not 0 <= self.bullets[j].pos[0] <= 128 and not 0 <= self.bullets[j].pos[1] <= 128:
+        j = len(self.bullets) - 1
+        while j > 0:
+            if not 0 <= self.bullets[j].x <= 128 and not 0 <= self.bullets[j].y <= 128:
                 del self.bullets[j]
-            j += 1
+            j -= 1
 
     def draw_font(self):
-        px.blt(43, 16, 0, 43, 16, 12, 12)
+        px.blt(43, 16, 0, 43, 16, 12, 12, 0)
         if len(self.background) < 3 and px.rndi(0, 2):
             planete = [[12, 0, 0, 0, 200, 15, 15], [110, 0, 0, 0, 224, 39, 39], [64, 0, 0, 192, 38, 63, 63]]
             a = px.rndi(0, 2)
@@ -103,7 +103,7 @@ class Game:
             self.vague()
             px.text(px.mouse_x, px.mouse_y, '+', 7)
             self.draw_bullet()
-            px.blt(self.hb.x + 4, self.hb.y + 3, 0, 0, 0, 9, 7) # affiche le joeur
+            px.blt(self.hb.x + 4, self.hb.y + 3, 0, 0, 0, 9, 7, 0) # affiche le joeur
 
 
 Game()
