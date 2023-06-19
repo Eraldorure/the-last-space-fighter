@@ -7,7 +7,7 @@ import functions as func
 class Game:
     def __init__(self):
         self.hb = obj.Hitbox(64, 100, 7, 6)
-        self.play = obj.Button(45, 64, 35, 10, "PLAY")
+        self.play = obj.Button(45, 64, 35, 11, "PLAY")
         self.bullets = []
         self.direction = [[-1, 0], [1, 0], [0, 1], [0, -1]]
         self.hp = 3
@@ -38,8 +38,8 @@ class Game:
                 self.move(2)
             if px.btn(px.KEY_D) or px.btn(px.KEY_RIGHT):
                 self.move(1)
-            if px.btnp(px.MOUSE_BUTTON_LEFT, repeat=5):
-                self.bullets.append(obj.Bullet(px.frame_count % 4 + 3, self.hb.x, self.hb.y, px.mouse_x, px.mouse_y))
+            if px.btnp(px.MOUSE_BUTTON_LEFT, repeat=5) and (self.hb.x + 8 != px.mouse_x + 1 or self.hb.y + 3 != px.mouse_y + 2):
+                self.bullets.append(obj.Bullet(px.frame_count % 4 + 3, self.hb.x + 8, self.hb.y + 3, px.mouse_x + 1, px.mouse_y + 2))
 
     def draw_bullet(self):
         for tir in self.bullets:
@@ -103,7 +103,7 @@ class Game:
             self.vague()
             px.text(px.mouse_x, px.mouse_y, '+', 7)
             self.draw_bullet()
-            px.blt(self.hb.x + 4, self.hb.y + 3, 0, 0, 0, 9, 7, 0) # affiche le joeur
+            px.blt(self.hb.x + 4, self.hb.y + 3, 0, 0, 0, 9, 7, 0) # affiche le joueur
 
 
 Game()

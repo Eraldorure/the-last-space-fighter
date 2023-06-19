@@ -13,7 +13,7 @@ def lerp_pts(xa: int, ya: int, xb: int, yb: int, t: float):
 
 def t_step(xa: int, ya: int, xb: int, yb: int):
     """Permet de calculer le pas de t (c'est-à-dire la valeur par laquelle il faut l'incrémenter)."""
-    return 1 / math.sqrt((xb - xa) ** 2 + (yb - ya) ** 2)
+    return 2 / math.sqrt((xb - xa) ** 2 + (yb - ya) ** 2)
 
 
 def enemy_amount(wave: int):
