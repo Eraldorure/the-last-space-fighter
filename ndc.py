@@ -4,106 +4,114 @@ import objects as obj
 import functions as func
 
 
-class Game:
+class App:
     def __init__(self):
-        self.hb = obj.Hitbox(64, 100, 7, 6)
-        self.play = obj.Button(45, 64, 35, 10, "PLAY")
-        self.bullets = []
-        self.direction = [[-1, 0], [1, 0], [0, 1], [0, -1]]
-        self.hp = 3
-        self.background = []
-        self.ennemies = []
-        self.wave = 1
-        px.init(128, 128, title="NDC 2023", fps=60)
+        px.init(128, 128, title="Space Shooté", fps=60)
         px.load("ndc.pyxres")
-        px.mouse(True)
+        self.current = "menu"
+        self.menu = Menu()
+        self.game = Game()
         px.run(self.update, self.draw)
 
-    def move(self, d):
-        if 0 < self.hb.x + self.direction[d][0] < 120 and 10 < self.hb.y + self.direction[d][1] < 125:
-            self.hb.x += self.direction[d][0]
-            self.hb.y += self.direction[d][1]
-
     def update(self):
-        px.cls(0)
-        if self.play.is_pressed():
-            self.play.toggle()
-            px.mouse(self.play.on)
-        if not self.play.on:
-            if px.btn(px.KEY_Z) or px.btn(px.KEY_UP):
-                self.move(3)
-            if px.btn(px.KEY_Q) or px.btn(px.KEY_LEFT):
-                self.move(0)
-            if px.btn(px.KEY_S) or px.btn(px.KEY_DOWN):
-                self.move(2)
-            if px.btn(px.KEY_D) or px.btn(px.KEY_RIGHT):
-                self.move(1)
-            if px.btnp(px.MOUSE_BUTTON_LEFT, repeat=5):
-                self.bullets.append(obj.Bullet(px.frame_count % 4 + 3, self.hb.x, self.hb.y, px.mouse_x, px.mouse_y))
-
-    def draw_bullet(self):
-        for tir in self.bullets:
-            tir.move()
-            tir.draw()
-        j = len(self.bullets) - 1
-        while j > 0:
-            if not 0 <= self.bullets[j].x <= 128 and not 0 <= self.bullets[j].y <= 128:
-                del self.bullets[j]
-            j -= 1
-
-    def draw_font(self):
-        px.blt(43, 16, 0, 43, 16, 12, 12, 0)
-        if len(self.background) < 3 and px.rndi(0, 2):
-            planete = [[12, 0, 0, 0, 200, 15, 15], [110, 0, 0, 0, 224, 39, 39], [64, 0, 0, 192, 38, 63, 63]]
-            a = px.rndi(0, 2)
-            self.background.append(planete[a])
-        if not px.frame_count % 5:
-            for planete in self.background:
-                planete[0], planete[1] = planete[0] + 1, planete[1] + 1
-            for vaisseau in self.ennemies:
-                vaisseau.y += 1
-
-    def vague(self):
-        if len(self.ennemies) == 0:
-            self.wave += 1
-            for t, n in func.enemy_amount(self.wave).items():
-                for _ in range(n):
-                    self.ennemies.append(obj.Enemy(px.rndi(20, 108), px.rndi(4, 16), t))
+        if px.btn(px.KEY_CTRL) and px.btnp(px.KEY_TAB):
+            self.switch_mode()
+        if self.current == "menu":
+            self.menu.update()
+            if self.menu.launch:
+                self.switch_mode()
+        else:
+            self.game.update()
+            # if player_death then switch_mode()
 
     def draw(self):
-        if self.play.on:  # menu
-            px.blt(20, 15, 0, 0, 32, 87, 39)
-            self.play.draw()
+        if self.current == "menu":
+            self.menu.draw()
         else:
-            self.draw_font()
-            for j in self.background:
-                px.blt(*j)
-            try:
-                for g in range(len(self.ennemies)):
-                    self.ennemies[g].draw()
-                    if self.hb & self.ennemies[g].hb:
-                        self.hp -= 1
-                        if self.hp == 0:
-                            self.hp = 3
-                            self.background = []
-                            self.ennemies = []
-                            self.wave = 1
-                            self.play.toggle()
-                            self.bullets = []
-                            self.hb = obj.Hitbox(64, 100, 7, 6)
-                            px.mouse(self.play.on)
-                        del self.ennemies[g]
-                    for k in range(len(self.bullets)):
-                        if self.bullets[k].hb & self.ennemies[g].hb:
-                            del self.ennemies[g], self.bullets[k]
-                for i in range(self.hp):  # affiche le nb de vie
-                    px.blt(1 + 8 * i, 1, 0, 0, 18, 7, 6)
-            except IndexError:
-                pass
-            self.vague()
-            px.text(px.mouse_x, px.mouse_y, '+', 7)
-            self.draw_bullet()
-            px.blt(self.hb.x + 4, self.hb.y + 3, 0, 0, 0, 9, 7, 0) # affiche le joeur
+            self.game.draw()
+
+    def switch_mode(self):
+        if self.current == "menu":
+            self.current = "game"
+            self.menu.launch = False
+            # px.mouse(False)
+        else:
+            self.current = "menu"
+            self.game = Game()
+            px.mouse(True)
 
 
-Game()
+class Menu:
+    def __init__(self):
+        self.launch = False
+        self.play = obj.Button(45, 64, 35, 11, "PLAY")
+        px.mouse(True)
+
+    def update(self):
+        if self.play.is_pressed():
+            self.launch = True
+
+    def draw(self):
+        px.cls(0)
+        px.blt(20, 15, 0, 0, 32, 87, 39, 0)
+        self.play.draw()
+
+
+class Game:
+    def __init__(self):
+        self.player = obj.Player(60, 110)
+        self.enemies = [obj.Enemy(5, 5, "small"), obj.Enemy(35, 5, "normal"), obj.Enemy(75, 5, "big")]
+        self.bullets = []
+        self.wave = 1
+        self.hb = obj.Hitbox(0, 0, 128, 128)
+
+    def update(self):
+        if px.btnp(px.MOUSE_BUTTON_LEFT, repeat=5) and (self.player.x + 4 != px.mouse_x or self.player.y != px.mouse_y):
+            self.bullets.append(obj.Bullet(7, self.player.x + 4, self.player.y, px.mouse_x, px.mouse_y))
+        if px.btnp(px.KEY_R):
+            self.bullets.clear()
+        if px.btn(px.KEY_Q):
+            self.player.move_left(1)
+        if px.btn(px.KEY_D):
+            self.player.move_right(1)
+        if px.btn(px.KEY_Z):
+            self.player.move_up(1)
+        if px.btn(px.KEY_S):
+            self.player.move_down(1)
+
+        for bullet in self.bullets:
+            bullet.move()
+            for enemy in self.enemies:
+                if not bullet.used and enemy.hb.contains(bullet.x, bullet.y):
+                    enemy.harm(1)
+                    bullet.used = True
+            if not self.hb.contains(bullet.x, bullet.y):
+                bullet.used = True
+        self.del_useless()
+
+    def draw(self):
+        px.cls(0)
+        for enemy in self.enemies:
+            # enemy.hb.draw(8)
+            enemy.draw()
+        for bullet in self.bullets:
+            # bullet.hb.draw(10)
+            bullet.draw()
+        # self.player.hb.draw(1)
+        self.player.draw()
+        px.text(5, 30, " ".join(str(enemy.hp) for enemy in self.enemies), 7)
+
+    def del_useless(self):
+        i = len(self.bullets) - 1
+        while i >= 0:
+            if self.bullets[i].used:
+                del self.bullets[i]
+            i -= 1
+        i = len(self.enemies) - 1
+        while i >= 0:
+            if self.enemies[i].is_dead:
+                del self.enemies[i]
+            i -= 1
+
+
+App()

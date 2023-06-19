@@ -19,18 +19,21 @@ class Hitbox:
     def __contains__(self, co):
         """Semblable à la méthode is_inside, à la différence près que cette version s'utilise
         comme ceci : '(x, y) in hitbox'."""
-        return self.is_inside(*co)
+        return self.contains(*co)
 
     def __and__(self, other):
         """Renvoie un booléen indiquant si deux hitboxes se chevauchent.
         S'utilise comme suit : 'hitbox1 & hitbox2'."""
-        dx = abs(self.x - other.x)
-        dy = abs(self.y - other.y)
-        return (dx < self.w or dx < other.w) and (dy < self.h or dy < other.w)
+        ax = self.x + self.w
+        ay = self.y + self.h
+        bx = other.x + other.w
+        by = other.y + other.h
+        return other.contains(self.x, self.y) or other.contains(self.x, ay) or other.contains(ax, self.y) or other.contains(ax, ay) \
+            or self.contains(other.x, other.y) or self.contains(other.x, by) or self.contains(bx, other.y) or self.contains(bx, by)
 
-    def is_inside(self, x, y):
+    def contains(self, x, y):
         """Indique si deux coordonnées x et y se situent à l'intérieur de la hitbox."""
-        return self.x <= x <= self.x + self.w and self.y <= y <= self.y + self.h
+        return self.x < x < self.x + self.w and self.y < y < self.y + self.h
 
     def draw(self, col):
         """Méthode permettant de dessiner la hitbox. À n'utiliser qu'à des fins de débug."""
@@ -56,7 +59,7 @@ class Button:
     def is_pressed(self, btn=px.MOUSE_BUTTON_LEFT):
         """Indique si la souris est située à l'intérieur de la hitbox du bouton et que la touche renseignée (par
         défaut le clic gauche de la souris) est pressée."""
-        return self.on and px.btnp(btn) and self.hb.is_inside(px.mouse_x, px.mouse_y)
+        return self.on and px.btnp(btn) and self.hb.contains(px.mouse_x, px.mouse_y)
 
     def draw(self, force=False):
         """Permet de dessiner le bouton.
@@ -91,8 +94,7 @@ class Enemy:
             px.blt(self.x, self.y, 0, *self.__attr["low"], self.w, self.h, 0)
 
     def harm(self, dmg: int):
-        """Permet d'infliger des dégâts à l'ennemi.
-        Modifie automatiquement les attributs 'dead' et 'injured'."""
+        """Permet d'infliger des dégâts à l'ennemi."""
         self.hp -= dmg
 
     @property
@@ -104,47 +106,64 @@ class Enemy:
         return self.hp < 1
 
     MODELS = {"small": {"hp": 2, "size": (11, 11), "full": (20, 0), "low": (32, 0)},
-              "normal": {"hp": 8, "size": (16, 16), "full": (44, 0), "low": (60, 0)},
-              "big": {"hp": 32, "size": (48, 48), "full": (102, 0), "low": (151, 0)}}
+              "normal": {"hp": 8, "size": (15, 15), "full": (44, 0), "low": (60, 0)},
+              "big": {"hp": 32, "size": (48, 44), "full": (102, 0), "low": (151, 0)}}
 
 
 class Bullet:
-    def __init__(self, colors, x, y, dir_x, dir_y):
+    """Classe représentant un tir (qu'il soit allié ou ennemi).
+    Fonctionne grâce à des interpolations linéaires (aka lerp)."""
+
+    def __init__(self, color, x, y, dir_x, dir_y):
         self.origin = x, y
         self.x = x
         self.y = y
         self.dx = dir_x
         self.dy = dir_y
         self.t = 0
-        self.couleurs = colors
+        self.color = color
         self.step = func.t_step(x, y, dir_x, dir_y)
+        self.used = False
         self.hb = Hitbox(x, y, 1, 1)
 
     def move(self):
-        try:
-            self.x, self.y = func.lerp_pts(*self.origin, self.dx, self.dy, self.t)
-        except OverflowError:
-            self.x, self.y = 0, 0
+        self.x, self.y = func.lerp_pts(*self.origin, self.dx, self.dy, self.t)
+        self.hb.x = self.x
+        self.hb.y = self.y
         self.t += self.step
 
     def draw(self):
-        px.rect(self.x, self.y, 1, 1, self.couleurs)
+        px.rect(self.x, self.y, 1, 1, self.color)
 
 
 class Player:
+    """Classe représentant le joueur, c'est-à-dire le vaisseau que le joueur contrôle."""
+
     def __init__(self, start_x: int, start_y: int, hp: int = 3):
         self.x = start_x
         self.y = start_y
         self.hp = hp
+        self.hb = Hitbox(start_x, start_y, 9, 7)
+
+    def draw(self):
+        px.blt(self.x, self.y, 0, 0, 0, 9, 7, 0)
 
     def move_up(self, step: int = 1):
         self.y -= step
+        self.hb.y -= step
 
     def move_down(self, step: int = 1):
         self.y += step
+        self.hb.y += step
 
     def move_left(self, step: int = 1):
         self.x -= step
+        self.hb.x -= step
 
     def move_right(self, step: int = 1):
         self.x += step
+        self.hb.x += step
+
+    @property
+    def is_dead(self):
+        return self.hp < 1
