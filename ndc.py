@@ -1,4 +1,5 @@
 import pyxel as px
+import random as rd
 
 import objects as obj
 import functions as func
@@ -62,7 +63,7 @@ class Game:
         self.player = obj.Player(60, 110)
         self.enemies = [obj.Enemy(5, 5, "small"), obj.Enemy(35, 5, "normal"), obj.Enemy(75, 5, "big")]
         self.bullets = []
-        self.wave = 1
+        self.wave = 0
         self.hb = obj.Hitbox(0, 0, 128, 128)
 
     def update(self):
@@ -88,6 +89,8 @@ class Game:
             if not self.hb.contains(bullet.x, bullet.y):
                 bullet.used = True
         self.del_useless()
+        if not self.enemies:
+            self.next_wave()
 
     def draw(self):
         px.cls(0)
@@ -99,7 +102,8 @@ class Game:
             bullet.draw()
         # self.player.hb.draw(1)
         self.player.draw()
-        px.text(5, 30, " ".join(str(enemy.hp) for enemy in self.enemies), 7)
+        px.text(118, 4, f"{self.wave :2}", 7)
+        px.text(3, 120, " ".join(str(enemy.hp) for enemy in self.enemies), 7)
 
     def del_useless(self):
         i = len(self.bullets) - 1
@@ -112,6 +116,13 @@ class Game:
             if self.enemies[i].is_dead:
                 del self.enemies[i]
             i -= 1
+
+    def next_wave(self):
+        self.wave += 1
+        new = func.enemy_amount(self.wave)
+        for model, amount in new.items():
+            for _ in range(amount):
+                self.enemies.append(obj.Enemy(rd.randint(1, 120), rd.randint(1, 15), model))
 
 
 App()
