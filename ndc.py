@@ -15,15 +15,14 @@ class App:
         px.run(self.update, self.draw)
 
     def update(self):
-        if px.btn(px.KEY_CTRL) and px.btnp(px.KEY_TAB):
-            self.switch_mode()
         if self.current == "menu":
             self.menu.update()
             if self.menu.launch:
                 self.switch_mode()
         else:
             self.game.update()
-            # if player_death then switch_mode()
+            if self.game.game_over:
+                self.switch_mode()
 
     def draw(self):
         if self.current == "menu":
@@ -35,7 +34,7 @@ class App:
         if self.current == "menu":
             self.current = "game"
             self.menu.launch = False
-            # px.mouse(False)
+            px.mouse(False)
         else:
             self.current = "menu"
             self.game = Game()
@@ -61,49 +60,52 @@ class Menu:
 class Game:
     def __init__(self):
         self.player = obj.Player(60, 110)
-        self.enemies = [obj.Enemy(5, 5, "small"), obj.Enemy(35, 5, "normal"), obj.Enemy(75, 5, "big")]
+        self.enemies = []
         self.bullets = []
         self.wave = 0
-        self.hb = obj.Hitbox(0, 0, 128, 128)
+        self.game_over = False
 
     def update(self):
         if px.btnp(px.MOUSE_BUTTON_LEFT, repeat=5) and (self.player.x + 4 != px.mouse_x or self.player.y != px.mouse_y):
             self.bullets.append(obj.Bullet(7, self.player.x + 4, self.player.y, px.mouse_x, px.mouse_y))
-        if px.btnp(px.KEY_R):
-            self.bullets.clear()
-        if px.btn(px.KEY_Q):
+        if px.btn(px.KEY_Q) and self.player.x > 2:
             self.player.move_left(1)
-        if px.btn(px.KEY_D):
+        if px.btn(px.KEY_D) and self.player.x < 117:
             self.player.move_right(1)
-        if px.btn(px.KEY_Z):
+        if px.btn(px.KEY_Z) and self.player.y > 9:
             self.player.move_up(1)
-        if px.btn(px.KEY_S):
+        if px.btn(px.KEY_S) and self.player.y < 119:
             self.player.move_down(1)
 
+        self.del_useless()
+        if not self.enemies:
+            self.next_wave()
+        for enemy in self.enemies:
+            if self.player.hb & enemy.hb:
+                self.player.hp -= 1
+                enemy.hp = 0
         for bullet in self.bullets:
             bullet.move()
             for enemy in self.enemies:
                 if not bullet.used and enemy.hb.contains(bullet.x, bullet.y):
                     enemy.harm(1)
                     bullet.used = True
-            if not self.hb.contains(bullet.x, bullet.y):
+            if not (0 < bullet.x < 128 and 0 < bullet.y < 128):
                 bullet.used = True
-        self.del_useless()
-        if not self.enemies:
-            self.next_wave()
+        if self.player.hp < 1:
+            self.end_game()
 
     def draw(self):
         px.cls(0)
         for enemy in self.enemies:
-            # enemy.hb.draw(8)
             enemy.draw()
         for bullet in self.bullets:
-            # bullet.hb.draw(10)
             bullet.draw()
-        # self.player.hb.draw(1)
+        for i in range(self.player.hp):
+            px.blt(2 + 8 * i, 1, 0, 0, 18, 7, 6, 0)
         self.player.draw()
-        px.text(118, 4, f"{self.wave :2}", 7)
-        px.text(3, 120, " ".join(str(enemy.hp) for enemy in self.enemies), 7)
+        px.text(119, 2, f"{self.wave :2}", 7)
+        px.text(px.mouse_x - 1, px.mouse_y - 2, "+", 7)
 
     def del_useless(self):
         i = len(self.bullets) - 1
@@ -121,8 +123,13 @@ class Game:
         self.wave += 1
         new = func.enemy_amount(self.wave)
         for model, amount in new.items():
+            width = obj.Enemy.MODELS[model]["size"][0]
             for _ in range(amount):
-                self.enemies.append(obj.Enemy(rd.randint(1, 120), rd.randint(1, 15), model))
+                self.enemies.append(obj.Enemy(rd.randint(2, 126 - width), rd.randint(9, 15), model))
+
+    def end_game(self):
+        self.game_over = True
+        print("t'as perdu grosse merde")
 
 
 App()
