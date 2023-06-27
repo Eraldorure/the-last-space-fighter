@@ -1,5 +1,5 @@
 import pyxel as px
-import random as rd
+from random import randint
 
 import objects as obj
 import functions as func
@@ -12,49 +12,82 @@ class App:
         self.current = "menu"
         self.menu = Menu()
         self.game = Game()
+        self.over = GameOver()
         px.run(self.update, self.draw)
 
     def update(self):
         if self.current == "menu":
             self.menu.update()
             if self.menu.launch:
-                self.switch_mode()
-        else:
+                self.current = "game"
+                self.menu.launch = False
+                px.mouse(False)
+        elif self.current == "over":
+            self.over.update()
+            if self.over.menu:
+                self.current = "menu"
+            elif self.over.restart:
+                self.current = "game"
+                px.mouse(False)
+        else:  # self.current == "game"
             self.game.update()
             if self.game.game_over:
-                self.switch_mode()
+                self.current = "over"
+                self.over = GameOver(self.game.wave)
+                self.game = Game()
+                px.mouse(True)
+
 
     def draw(self):
         if self.current == "menu":
             self.menu.draw()
+        elif self.current == "over":
+            self.over.draw()
         else:
             self.game.draw()
 
-    def switch_mode(self):
-        if self.current == "menu":
-            self.current = "game"
-            self.menu.launch = False
-            px.mouse(False)
-        else:
-            self.current = "menu"
-            self.game = Game()
-            px.mouse(True)
 
 
 class Menu:
     def __init__(self):
         self.launch = False
-        self.play = obj.Button(45, 64, 35, 11, "PLAY")
+        self.play_btn = obj.Button(40, 68, 45, 11, "JOUER")
         px.mouse(True)
 
     def update(self):
-        if self.play.is_pressed():
+        if self.play_btn.is_pressed():
             self.launch = True
 
     def draw(self):
         px.cls(0)
         px.blt(20, 15, 0, 0, 32, 87, 39, 0)
-        self.play.draw()
+        self.play_btn.draw()
+        px.text(91, 121, "v1.0-beta", 7)
+
+
+class GameOver:
+    def __init__(self, score: int = 0):
+        self.menu = False
+        self.restart = False
+        self.menu_btn = obj.Button(10, 68, 50, 11, "MENU")
+        self.restart_btn = obj.Button(68, 68, 50, 11, "RECOMMENCER")
+        self.score = score
+        px.mouse(True)
+
+    def update(self):
+        if self.restart_btn.is_pressed():
+            self.restart = True
+        elif self.menu_btn.is_pressed():
+            self.menu = True
+
+    def draw(self):
+        px.cls(0)
+        px.text(45, 16, "GAME", 9)
+        px.text(68, 16, "OVER", 2)
+        txt = f"Score  {self.score}"
+        px.text(64 - 2 * len(txt) + 1, 35, txt, 7)
+        self.menu_btn.draw()
+        self.restart_btn.draw()
 
 
 class Game:
@@ -92,8 +125,7 @@ class Game:
                     bullet.used = True
             if not (0 < bullet.x < 128 and 0 < bullet.y < 128):
                 bullet.used = True
-        if self.player.hp < 1:
-            self.end_game()
+        self.game_over = self.player.hp < 1
 
     def draw(self):
         px.cls(0)
@@ -125,11 +157,7 @@ class Game:
         for model, amount in new.items():
             width = obj.Enemy.MODELS[model]["size"][0]
             for _ in range(amount):
-                self.enemies.append(obj.Enemy(rd.randint(2, 126 - width), rd.randint(9, 15), model))
-
-    def end_game(self):
-        self.game_over = True
-        print("t'as perdu grosse merde")
+                self.enemies.append(obj.Enemy(randint(2, 126 - width), randint(9, 15), model))
 
 
 App()
