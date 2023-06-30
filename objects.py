@@ -79,7 +79,7 @@ class Button:
 class Enemy:
     """Classe représentant un ennemi (de tout types)."""
 
-    def __init__(self, x, y, dir_x, dir_y, model="normal"):
+    def __init__(self, x: int, y: int, dir_x: int, dir_y: int, model: str = "normal"):
         if model not in self.MODELS:
             raise ValueError(f"unknown model '{model}', you must choose between between {', '.join(self.MODELS.keys())}")
         self.x = x
