@@ -15,7 +15,7 @@ def lerp_pts(xa: int, ya: int, xb: int, yb: int, t: float) -> tuple[int, int]:
 
 def t_step(xa: int, ya: int, xb: int, yb: int) -> float:
     """Permet de calculer le pas de t (c'est-à-dire la valeur par laquelle il faut l'incrémenter)."""
-    return 2 / math.sqrt((xb - xa) ** 2 + (yb - ya) ** 2)
+    return 1 / math.sqrt((xb - xa) ** 2 + (yb - ya) ** 2)
 
 
 def enemy_amount(wave: int) -> dict[str, int]:
@@ -23,10 +23,3 @@ def enemy_amount(wave: int) -> dict[str, int]:
     return {"small": int(-4 / wave + 6 if wave < 4 else (wave + 2) / 3 + 3),
             "normal": 0 if wave < 2 else int(math.sqrt(wave - 2) if wave < 11 else 0.2 * (11 - wave) ** 2 + 3),
             "big": 0 if wave < 10 else int(0.8 * wave - 8)}
-
-
-def normalize(x: int, y: int) -> tuple[float, float]:
-    """Fonction permettant de normaliser un vecteur (ici représenté par les arguments x et y), c'est-à-dire de le
-    redimensionner afin que sa norme soit égale à 1."""
-    length = math.sqrt(x ** 2 + y ** 2)
-    return x / length, y / length

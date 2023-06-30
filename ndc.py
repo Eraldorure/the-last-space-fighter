@@ -100,7 +100,7 @@ class Game:
 
     def update(self):
         if px.btnp(px.MOUSE_BUTTON_LEFT, repeat=5) and (self.player.x + 4 != px.mouse_x or self.player.y != px.mouse_y):
-            self.bullets.append(obj.Bullet(7, self.player.x + 4, self.player.y, px.mouse_x, px.mouse_y))
+            self.bullets.append(obj.Bullet(self.player.x + 4, self.player.y, px.mouse_x, px.mouse_y))
         if px.btn(px.KEY_Q) and self.player.x > 2:
             self.player.move_left(1)
         if px.btn(px.KEY_D) and self.player.x < 117:
@@ -114,14 +114,19 @@ class Game:
         if not self.enemies:
             self.next_wave()
         for enemy in self.enemies:
-            if self.player.hb & enemy.hb:
+            enemy.move()
+            if enemy.y > 128:
+                enemy.y = enemy.hb.y = -enemy.h
+                enemy.t = 0
+                enemy.origin = enemy.x, enemy.y
+            elif self.player.hb & enemy.hb:
                 self.player.hp -= 1
                 enemy.hp = 0
         for bullet in self.bullets:
             bullet.move()
             for enemy in self.enemies:
                 if not bullet.used and enemy.hb.contains(bullet.x, bullet.y):
-                    enemy.harm(1)
+                    enemy.harm()
                     bullet.used = True
             if not (0 < bullet.x < 128 and 0 < bullet.y < 128):
                 bullet.used = True
@@ -155,9 +160,11 @@ class Game:
         self.wave += 1
         new = func.enemy_amount(self.wave)
         for model, amount in new.items():
-            width = obj.Enemy.MODELS[model]["size"][0]
+            w, h = obj.Enemy.MODELS[model]["size"]
             for _ in range(amount):
-                self.enemies.append(obj.Enemy(randint(2, 126 - width), randint(9, 15), model))
+                x = randint(2, 126 - w)
+                y = randint(-10 - h, -h)
+                self.enemies.append(obj.Enemy(x, y, x, y + 100, model))
 
 
 App()
