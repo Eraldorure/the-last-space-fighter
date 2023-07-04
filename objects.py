@@ -63,17 +63,22 @@ class Button:
     def is_pressed(self, btn: int = px.MOUSE_BUTTON_LEFT) -> bool:
         """Indique si la souris est située à l'intérieur de la hitbox du bouton et que la touche renseignée (par
         défaut le clic gauche de la souris) est pressée."""
-        return self.on and px.btnp(btn) and self.hb.contains(px.mouse_x, px.mouse_y)
+        return self.on and px.btnp(btn) and self.mouse_over()
+
+    def mouse_over(self) -> bool:
+        """Renvoie True si la souris est en train de survoler le bouton et False sinon."""
+        return self.hb.contains(px.mouse_x, px.mouse_y)
 
     def draw(self, force: bool = False):
         """Permet de dessiner le bouton.
         Le paramètre 'force' permet de forcer le dessin du bouton même si ce dernier est désactivé."""
         if self.on or force:
             px.rect(self.x, self.y, self.w, self.h, 9)
-            px.rectb(self.x, self.y, self.w, self.h, 2)
+            alt = self.mouse_over()
+            px.rectb(self.x, self.y, self.w, self.h, 2 - alt)
             px.text(x=self.x + self.w // 2 - 2 * len(self.txt) + 1,
                     y=self.y + self.h // 2 - 2,
-                    s=self.txt, col=7)
+                    s=self.txt, col=7 - alt)
 
 
 class Enemy:
@@ -92,7 +97,7 @@ class Enemy:
         self.model = model
         self.__attr = self.MODELS[model]
         self.w, self.h = self.__attr["size"]
-        self.hp = self.__attr["hp"]
+        self.death_score = self.hp = self.__attr["hp"]
         self.__half_hp = self.hp // 2 + 1
         self.hb = Hitbox(x, y, self.w, self.h)
 
@@ -110,12 +115,13 @@ class Enemy:
         """Permet d'infliger des dégâts à l'ennemi."""
         self.hp -= dmg
 
-    def move(self):
-        """Permet de déplacer l'ennemi automatiquement dans la direction fournie lors de l'instanciation."""
+    def move(self, speed: float = 1):
+        """Permet de déplacer l'ennemi automatiquement dans la direction fournie lors de l'instanciation.
+        L'attribut 'speed' est un coefficient qui permet d'altérer la vitesse de déplacement en venant se multiplier à cette dernière."""
+        self.t += self.step * speed
         self.x, self.y = func.lerp_pts(*self.origin, self.dx, self.dy, self.t)
         self.hb.x = self.x
         self.hb.y = self.y
-        self.t += self.step
 
     @property
     def is_injured(self) -> bool:
