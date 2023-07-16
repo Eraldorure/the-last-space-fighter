@@ -33,5 +33,7 @@ def len_of_int(number: int, include_sign: bool = False) -> int:
         return 1
     elif number > 0:
         return int(math.log10(number)) + 1
+    elif include_sign:
+        return int(math.log10(-number)) + 2
     else:
-        return int(math.log10(-number)) + 1 + include_sign
+        return int(math.log10(-number)) + 1

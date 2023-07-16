@@ -1,3 +1,5 @@
+"""Fichier contenant les classes nécessaires au bon fonctionnement du jeu, comme les ennemis, les tirs, le joueur, etc."""
+
 import pyxel as px
 from random import randint
 
@@ -6,7 +8,7 @@ import functions as func
 
 class Hitbox:
     """Une classe abstraite représentant une hitbox.
-    Cette classe est utilisée par la totalité des objets qui possède une quelconque interaction."""
+    Cette classe est utilisée par la totalité des objets possédant une quelconque interaction."""
 
     def __init__(self, x: int, y: int, width: int, height: int):
         self.x = x
@@ -44,41 +46,34 @@ class Hitbox:
 class Button:
     """Une classe permettant de représenter un bouton et d'interagir avec."""
 
-    def __init__(self, x: int, y: int, width: int, height: int, text: str = "", enabled: bool = True):
+    def __init__(self, x: int, y: int, width: int, height: int, text: str = ""):
         self.x = x
         self.y = y
         self.w = width
         self.h = height
         self.txt = text
-        self.on = enabled
         self.hb = Hitbox(x, y, width, height)
 
     def __repr__(self):
-        return f"Button({self.x}, {self.y}, {self.w}, {self.h}, {self.txt}, {self.on})"
-
-    def toggle(self):
-        """Permet de (dés)activer le bouton. Une fois désactivé, le bouton ne sera plus dessiné"""
-        self.on = not self.on
+        return f"Button({self.x}, {self.y}, {self.w}, {self.h}, {self.txt})"
 
     def is_pressed(self, btn: int = px.MOUSE_BUTTON_LEFT) -> bool:
         """Indique si la souris est située à l'intérieur de la hitbox du bouton et que la touche renseignée (par
         défaut le clic gauche de la souris) est pressée."""
-        return self.on and px.btnp(btn) and self.mouse_over()
+        return px.btnp(btn) and self.mouse_over()
 
     def mouse_over(self) -> bool:
         """Renvoie True si la souris est en train de survoler le bouton et False sinon."""
         return self.hb.contains(px.mouse_x, px.mouse_y)
 
-    def draw(self, force: bool = False):
+    def draw(self):
         """Permet de dessiner le bouton.
         Le paramètre 'force' permet de forcer le dessin du bouton même si ce dernier est désactivé."""
-        if self.on or force:
-            px.rect(self.x, self.y, self.w, self.h, 9)
-            alt = self.mouse_over()
-            px.rectb(self.x, self.y, self.w, self.h, 2 - alt)
-            px.text(x=self.x + self.w // 2 - 2 * len(self.txt) + 1,
-                    y=self.y + self.h // 2 - 2,
-                    s=self.txt, col=7 - alt)
+        px.rect(self.x, self.y, self.w, self.h, 9)
+        px.rectb(self.x, self.y, self.w, self.h, 2 - self.mouse_over())
+        px.text(x=self.x + self.w // 2 - 2 * len(self.txt) + 1,
+                y=self.y + self.h // 2 - 2,
+                s=self.txt, col=7)
 
 
 class Enemy:
@@ -89,51 +84,51 @@ class Enemy:
             raise ValueError(f"unknown model '{model}', you must choose between between {', '.join(self.MODELS.keys())}")
         self.x = x
         self.y = y
-        self.origin = x, y
-        self.dx = dir_x
-        self.dy = dir_y
+        self.__ox = x
+        self.__oy = y
+        self.__dx = dir_x
+        self.__dy = dir_y
         self.t = 0
         self.step = func.t_step(x, y, dir_x, dir_y) * randint(3, 5) / 10
-        self.model = model
+        self.__model = model
         self.__attr = self.MODELS[model]
         self.w, self.h = self.__attr["size"]
-        self.death_score = self.hp = self.__attr["hp"]
+        self.hp = self.__attr["hp"]
+        self.death_score = self.hp
         self.__half_hp = self.hp // 2 + 1
         self.hb = Hitbox(x, y, self.w, self.h)
 
     def __repr__(self):
-        return f"Enemy({self.x}, {self.y}, {self.dx}, {self.dy}, {self.model}"
+        return f"Enemy({self.x}, {self.y}, {self.__dx}, {self.__dy}, {self.__model}"
 
     def draw(self):
         """Dessine les ennemis. Leur design change en fonction de leur vie."""
         if self.is_injured:
-            px.blt(self.x, self.y, 0, *self.__attr["full"], self.w, self.h, 0)
+            px.blt(self.x, self.y, 0, *self.__attr["full"], self.w, self.h, self.__attr["bg"])
         else:
-            px.blt(self.x, self.y, 0, *self.__attr["low"], self.w, self.h, 0)
-
-    def harm(self, dmg: int = 1):
-        """Permet d'infliger des dégâts à l'ennemi."""
-        self.hp -= dmg
+            px.blt(self.x, self.y, 0, *self.__attr["low"], self.w, self.h, self.__attr["bg"])
 
     def move(self, speed: float = 1):
         """Permet de déplacer l'ennemi automatiquement dans la direction fournie lors de l'instanciation.
         L'attribut 'speed' est un coefficient qui permet d'altérer la vitesse de déplacement en venant se multiplier à cette dernière."""
         self.t += self.step * speed
-        self.x, self.y = func.lerp_pts(*self.origin, self.dx, self.dy, self.t)
+        self.x, self.y = func.lerp_pts(self.__ox, self.__oy, self.__dx, self.__dy, self.t)
         self.hb.x = self.x
         self.hb.y = self.y
 
     @property
     def is_injured(self) -> bool:
+        """Indique si l'ennemi est blessé, c'est-à-dire si ses PV actuels sont inférieurs à ses PV de départ."""
         return self.hp < self.__half_hp
 
     @property
     def is_dead(self) -> bool:
+        """Indique si l'ennemi est mort, c'est-à-dire si ses PV inférieurs ou égaux à 0."""
         return self.hp < 1
 
-    MODELS = {"small": {"hp": 2, "size": (11, 11), "full": (20, 0), "low": (32, 0)},
-              "normal": {"hp": 8, "size": (15, 15), "full": (44, 0), "low": (60, 0)},
-              "big": {"hp": 32, "size": (48, 44), "full": (102, 0), "low": (151, 0)}}
+    MODELS = {"small": {"hp": 2, "size": (11, 11), "full": (20, 0), "low": (32, 0), "bg": 7},
+              "normal": {"hp": 8, "size": (15, 15), "full": (44, 0), "low": (60, 0), "bg": 7},
+              "big": {"hp": 32, "size": (48, 44), "full": (102, 0), "low": (151, 0)}, "bg": 7}
 
 
 class Bullet:
@@ -141,11 +136,12 @@ class Bullet:
     Fonctionne grâce à des interpolations linéaires (aka lerp)."""
 
     def __init__(self, x: int, y: int, dir_x: int, dir_y: int, color: int = 7):
-        self.origin = x, y
         self.x = x
         self.y = y
-        self.dx = dir_x
-        self.dy = dir_y
+        self.__dx = dir_x
+        self.__dy = dir_y
+        self.__ox = x
+        self.__oy = y
         self.t = 0
         self.col = color
         self.step = 2 * func.t_step(x, y, dir_x, dir_y)
@@ -153,11 +149,11 @@ class Bullet:
         self.hb = Hitbox(x, y, 1, 1)
 
     def __repr__(self):
-        return f"Bullet({self.x}, {self.y}, {self.dx}, {self.dy}, {self.col})"
+        return f"Bullet({self.x}, {self.y}, {self.__dx}, {self.__dy}, {self.col})"
 
     def move(self):
         """Permet de déplacer le tir automatiquement dans la direction fournie lors de l'instanciation."""
-        self.x, self.y = func.lerp_pts(*self.origin, self.dx, self.dy, self.t)
+        self.x, self.y = func.lerp_pts(self.__ox, self.__oy, self.__dx, self.__dy, self.t)
         self.hb.x = self.x
         self.hb.y = self.y
         self.t += self.step
@@ -177,7 +173,7 @@ class Player:
         self.hb = Hitbox(start_x, start_y, 9, 7)
 
     def __repr__(self):
-        return f"{self.x}, {self.y}, {self.hp}"
+        return f"Player({self.x}, {self.y}, {self.hp})"
 
     def draw(self):
         """Permet de dessiner le joueur, c'est-à-dire son vaisseau."""
@@ -205,4 +201,5 @@ class Player:
 
     @property
     def is_dead(self) -> bool:
+        """Indique si le joueur est mort, c'est-à-dire si ses PV sont inférieurs ou égaux à 0."""
         return self.hp < 1

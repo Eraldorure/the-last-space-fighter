@@ -1,3 +1,6 @@
+"""Le fichier principal du projet. Celui-ci consiste en plusieurs classes, chacune représentant une page de
+l'application, exception faite de la classe 'App' qui sert ici de classe principale."""
+
 import pyxel as px
 from random import randint
 
@@ -6,6 +9,9 @@ import functions as func
 
 
 class App:
+    """Classe permettant de lier toutes les classes (aka pages) de l'application.
+    C'est également dans celle-ci que Pyxel fonctionne."""
+
     def __init__(self):
         px.init(128, 128, title="Space Shooté", fps=60)
         px.load("ndc.pyxres")
@@ -49,6 +55,8 @@ class App:
 
 
 class Menu:
+    """Classe représentant le menu d'accueil du jeu."""
+
     def __init__(self):
         self.launch = False
         self.btn_play = obj.Button(40, 68, 45, 11, "JOUER")
@@ -66,6 +74,8 @@ class Menu:
 
 
 class GameOver:
+    """Classe représentant l'écran de Game Over du jeu."""
+
     def __init__(self, score: int = 0):
         self.menu = False
         self.restart = False
@@ -96,6 +106,8 @@ class GameOver:
 
 
 class Game:
+    """Classe représentant le jeu lui-même."""
+
     def __init__(self):
         self.player = obj.Player(60, 110)
         self.enemies = []
@@ -124,7 +136,7 @@ class Game:
             if enemy.y > 128:  # l'ennemi sort de l'écran et est ramené en haut
                 enemy.y = enemy.hb.y = -enemy.h
                 enemy.t = 0
-                enemy.origin = enemy.x, enemy.y
+                enemy.__origin = enemy.x, enemy.y
                 self.score -= 10
             elif self.player.hb & enemy.hb:  # l'ennemi touche le joueur
                 self.player.hp -= 1
@@ -133,7 +145,7 @@ class Game:
             bullet.move()
             for enemy in self.enemies:
                 if not bullet.used and enemy.hb.contains(bullet.x, bullet.y):  # un tir touche un ennemi
-                    enemy.harm()
+                    enemy.hp -= 1
                     bullet.used = True
             if not (0 < bullet.x < 128 and 0 < bullet.y < 128):
                 bullet.used = True
@@ -153,6 +165,7 @@ class Game:
         px.text(px.mouse_x - 1, px.mouse_y - 2, "+", 7)
 
     def del_useless(self):
+        """Méthode permettant de supprimer les objets inutiles, tels que les ennemis morts ou les tirs sortis de l'écran."""
         i = len(self.bullets) - 1
         while i >= 0:
             if self.bullets[i].used:
@@ -166,6 +179,7 @@ class Game:
             i -= 1
 
     def next_wave(self):
+        """Méthode permettant de passer à la vague suivante. S'occupe également de créer les ennemis."""
         self.wave += 1
         self.score += 100
         new = func.enemy_amount(self.wave)
