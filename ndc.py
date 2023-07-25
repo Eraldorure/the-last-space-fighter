@@ -137,7 +137,7 @@ class Game:
                 enemy.y = enemy.hb.y = -enemy.h
                 enemy.t = 0
                 enemy.__origin = enemy.x, enemy.y
-                self.score -= 10
+                self.score = max(self.score - 10, 0)
             elif self.player.hb & enemy.hb:  # l'ennemi touche le joueur
                 self.player.hp -= 1
                 enemy.hp = enemy.death_score = 0
@@ -187,7 +187,7 @@ class Game:
             w, h = obj.Enemy.MODELS[model]["size"]
             for _ in range(amount):
                 x = randint(2, 126 - w)
-                y = randint(-10 - h, -h)
+                y = randint(-2 * h, -h)
                 self.enemies.append(obj.Enemy(x, y, x, y + 100, model))
 
 

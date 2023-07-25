@@ -104,9 +104,9 @@ class Enemy:
     def draw(self):
         """Dessine les ennemis. Leur design change en fonction de leur vie."""
         if self.is_injured:
-            px.blt(self.x, self.y, 0, *self.__attr["full"], self.w, self.h, self.__attr["bg"])
-        else:
             px.blt(self.x, self.y, 0, *self.__attr["low"], self.w, self.h, self.__attr["bg"])
+        else:
+            px.blt(self.x, self.y, 0, *self.__attr["full"], self.w, self.h, self.__attr["bg"])
 
     def move(self, speed: float = 1):
         """Permet de déplacer l'ennemi automatiquement dans la direction fournie lors de l'instanciation.
@@ -126,9 +126,10 @@ class Enemy:
         """Indique si l'ennemi est mort, c'est-à-dire si ses PV inférieurs ou égaux à 0."""
         return self.hp < 1
 
-    MODELS = {"small": {"hp": 2, "size": (11, 11), "full": (20, 0), "low": (32, 0), "bg": 7},
-              "normal": {"hp": 8, "size": (15, 15), "full": (44, 0), "low": (60, 0), "bg": 7},
-              "big": {"hp": 32, "size": (48, 44), "full": (102, 0), "low": (151, 0)}, "bg": 7}
+    MODELS = {"small": {"hp": 2, "size": (11, 11), "full": (32, 0), "low": (20, 0), "bg": 0},
+              "normal": {"hp": 8, "size": (15, 15), "full": (44, 0), "low": (60, 0), "bg": 0},
+              "big": {"hp": 32, "size": (30, 30), "full": (31, 73), "low": (31, 104), "bg": 11},
+              "boss": {"hp": 96, "size": (48, 44), "full": (102, 0), "low": (151, 0), "bg": 0}}
 
 
 class Bullet:
