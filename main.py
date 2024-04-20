@@ -12,58 +12,64 @@ class App:
     C'est également dans celle-ci que Pyxel fonctionne."""
 
     def __init__(self):
-        px.init(128, 128, title="Space Shooté", fps=60)
+        px.init(128, 128, title="The Last Space Fighter", fps=60)
         px.load("ndc.pyxres")
-        self.current = "menu"
+        self.current_screen = 0  # 0 = Menu, 1 = Game, 2 = GameOver, 3 = Credits
         self.menu = Menu()
         self.game = Game()
         self.over = GameOver()
+        self.credits = Credits()
         px.run(self.update, self.draw)
 
     def update(self):
-        if self.current == "menu":
-            self.menu.update()
-            if self.menu.launch:
-                self.current = "game"
-                self.menu.launch = False
-                px.mouse(False)
-        elif self.current == "over":
-            self.over.update()
-            if self.over.menu:
-                self.current = "menu"
-            elif self.over.restart:
-                self.current = "game"
-                px.mouse(False)
-        else:  # self.current == "game"
+        if self.current_screen == 1:  # Game
             self.game.update()
-            if self.game.game_over:
-                self.current = "over"
-                self.over = GameOver(self.game.score)
+            if self.game.is_game_over:
+                self.current_screen = 2
+                self.over = GameOver(self.game.wave, self.game.score)
                 self.game = Game()
                 px.mouse(True)
+        elif self.current_screen == 2:  # GameOver
+            self.over.update()
+            if self.over.btn_menu.is_pressed():
+                self.current_screen = 0
+            elif self.over.btn_restart.is_pressed():
+                self.current_screen = 1
+                px.mouse(False)
+        elif self.current_screen == 3:  # Credits
+            self.credits.update()
+            if self.credits.btn_menu.is_pressed():
+                self.current_screen = 0
+        else:  # Menu
+            self.menu.update()
+            if self.menu.btn_play.is_pressed():
+                self.current_screen = 1
+                px.mouse(False)
+            elif self.menu.btn_credits.is_pressed():
+                self.current_screen = 3
 
     def draw(self):
-        if self.current == "menu":
-            self.menu.draw()
-        elif self.current == "over":
-            self.over.draw()
-        else:
+        if self.current_screen == 1:
             self.game.draw()
+        elif self.current_screen == 2:
+            self.over.draw()
+        elif self.current_screen == 3:
+            self.credits.draw()
+        else:
+            self.menu.draw()
 
 
 class Menu:
     """Classe représentant le menu d'accueil du jeu."""
 
     def __init__(self):
-        self.launch = False
         self.btn_play = ui.Button(40, 68, 45, 11, "JOUER")
-        self.btn_quit = ui.ClickableText(90, 119, "Quitter X")
+        self.btn_quit = ui.ClickableText(97, 119, "Quitter")
+        self.btn_credits = ui.ClickableText(4, 119, "v1.0")
         px.mouse(True)
 
     def update(self):
-        if self.btn_play.is_pressed():
-            self.launch = True
-        elif self.btn_quit.is_pressed():
+        if self.btn_quit.is_pressed():
             px.quit()
 
     def draw(self):
@@ -71,39 +77,64 @@ class Menu:
         px.blt(20, 15, 0, 0, 32, 87, 39, 0)
         self.btn_play.draw()
         self.btn_quit.draw()
-        px.text(3, 120, "v1.0", 7)
+        self.btn_credits.draw()
 
 
 class GameOver:
     """Classe représentant l'écran de Game Over du jeu."""
 
-    def __init__(self, score: int = 0):
-        self.menu = False
-        self.restart = False
-        self.btn_menu = ui.Button(10, 68, 50, 11, "MENU")
-        self.btn_restart = ui.Button(68, 68, 50, 11, "RECOMMENCER")
+    def __init__(self, wave: int = 0, score: int = 0):
+        self.btn_menu = ui.Button(10, 80, 50, 11, "MENU")
+        self.btn_restart = ui.Button(68, 80, 50, 11, "REESSAYER")
         self.col_game = 9
         self.col_over = 2
+        self.wave = wave
         self.score = score
         self.__start_frame_count = px.frame_count
         px.mouse(True)
 
     def update(self):
-        if self.btn_restart.is_pressed():
-            self.restart = True
-        elif self.btn_menu.is_pressed():
-            self.menu = True
-        if not (px.frame_count - self.__start_frame_count) % 60:
+        if not (px.frame_count - self.__start_frame_count) % 40:
             self.col_game, self.col_over = self.col_over, self.col_game
 
     def draw(self):
         px.cls(0)
-        px.text(45, 16, "GAME", self.col_game)
-        px.text(68, 16, "OVER", self.col_over)
-        txt = f"Score  {self.score}"
-        px.text(65 - 2 * len(txt), 35, txt, 7)
+        px.text(45, 12, "GAME", self.col_game)
+        px.text(68, 12, "OVER", self.col_over)
+        px.line(16, 30, 111, 30, 1)
+        px.text(45, 44, "Wave", 7)
+        px.text(68, 44, f"{self.wave:04}", 7)
+        px.text(41, 54, "Score", 7)
+        px.text(68, 54, f"{self.score:05}", 7)
         self.btn_menu.draw()
         self.btn_restart.draw()
+
+
+class Credits:
+    """Classe représentant la page des crédits du jeu."""
+
+    def __init__(self):
+        self.btn_menu = ui.ClickableText(69, 119, "Retour au menu")
+
+    def update(self):
+        pass
+
+    def draw(self):
+        px.cls(0)
+        px.text(50, 4, "CREDITS", 9)
+        px.line(4, 13, 123, 13, 1)
+        px.text(4, 18, "Version : 1.0", 7)
+        px.text(4, 27, "Developpement : Eraldor\n"
+                       "                Magistro", 7)
+        px.text(4, 42, "Graphismes : La Nuit du Code", 7)
+        px.text(4, 75, "Ce projet a ete realise dans\n"
+                       "le cadre de la Nuit du Code\n"
+                       "2023 et cette version est une\n"
+                       "evolution du travail rendu.\n"
+                       "Le jeu originel est trouvable\n"
+                       "via le depot GitHub du projet.", 7)
+        px.line(4, 114, 123, 114, 1)
+        self.btn_menu.draw()
 
 
 class Game:
@@ -115,7 +146,7 @@ class Game:
         self.bullets = []
         self.wave = 0
         self.score = -100
-        self.game_over = False
+        self.is_game_over = False
 
     def update(self):
         if px.btnp(px.MOUSE_BUTTON_LEFT, repeat=5) and (self.player.x + 4 != px.mouse_x or self.player.y != px.mouse_y):
@@ -149,7 +180,7 @@ class Game:
                     bullet.used = True
             if not (0 < bullet.x < 128 and 0 < bullet.y < 128):
                 bullet.used = True
-        self.game_over = self.player.hp < 1
+        self.is_game_over = self.player.hp < 1
 
     def draw(self):
         px.cls(0)

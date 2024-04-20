@@ -63,8 +63,7 @@ class Button:
         return self.hb.contains(px.mouse_x, px.mouse_y)
 
     def draw(self):
-        """Permet de dessiner le bouton.
-        Le paramètre 'force' permet de forcer le dessin du bouton même si ce dernier est désactivé."""
+        """Permet de dessiner le bouton."""
         px.rect(self.x, self.y, self.w, self.h, 9)
         px.rectb(self.x, self.y, self.w, self.h, 2 - self.mouse_over())
         px.text(x=self.x + self.w // 2 - 2 * len(self.txt) + 1,
@@ -73,6 +72,8 @@ class Button:
 
 
 class ClickableText(Button):
+    """Une classe permettant de représenter un texte cliquable. Fonctionne de la même manière qu'un bouton."""
+
     def __init__(self, x: int, y: int, text: str):
         self.txt = text
         temp = text.splitlines()
@@ -84,4 +85,5 @@ class ClickableText(Button):
     def draw(self):
         col = 1 if self.mouse_over() else 7
         px.text(self.x, self.y, self.txt, col)
-        px.line(self.x, y := self.y + self.h - 1, self.x + self.w - 1, y, col)
+        if self.mouse_over():
+            px.line(self.x, y := self.y + self.h - 1, self.x + self.w - 1, y, col)
