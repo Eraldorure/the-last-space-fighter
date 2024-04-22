@@ -4,9 +4,19 @@ import math
 from random import randint
 
 
-def lerp(a: int, b: int, t: float) -> float:
+def lerp(a: float, b: float, t: float) -> float:
     """Fonction d'interpolation linéaire entre deux nombres."""
     return a * (1 - t) + b * t
+
+
+def inv_lerp(a: float, b: float, x: float) -> float:
+    """Fonction d'interpolation linéaire inverse entre deux nombres."""
+    return (x - a) / (b - a)
+
+
+def remap(a: float, b: float, c: float, d: float, x: float) -> float:
+    """Permet de réaffecter une valeur x d'une plage [a, b] à une autre plage [c, d]."""
+    return c + (d - c) * inv_lerp(a, b, x)
 
 
 def lerp_pts(xa: int, ya: int, xb: int, yb: int, t: float) -> tuple[int, int]:
@@ -33,7 +43,9 @@ def len_of_int(number: int, include_sign: bool = False) -> int:
         return 1
     elif number > 0:
         return int(math.log10(number)) + 1
-    elif include_sign:
-        return int(math.log10(-number)) + 2
     else:
-        return int(math.log10(-number)) + 1
+        return int(math.log10(-number)) + include_sign + 1
+
+
+if __name__ == '__main__':
+    print(remap(10, 20, 100, 200, 13))

@@ -77,7 +77,7 @@ class Bullet:
         self.t = 0
         self.col = color
         self.step = 2 * fn.t_step(x, y, dir_x, dir_y)
-        self.used = False
+        self.is_deleted = False
         # self.hb = Hitbox(x, y, 1, 1)  # Inutile à l'heure actuelle
 
     def __repr__(self):
@@ -89,6 +89,11 @@ class Bullet:
         # self.hb.x = self.x
         # self.hb.y = self.y
         self.t += self.step
+
+    def delete(self):
+        """Permet d'indiquer que le tir doit être supprimé, ou du moins qu'il est ineffectif."""
+        self.is_deleted = True
+        self.col = 2
 
     def draw(self):
         """Permet de dessiner le tir."""

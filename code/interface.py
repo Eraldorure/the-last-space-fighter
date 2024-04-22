@@ -64,11 +64,15 @@ class Button:
 
     def draw(self):
         """Permet de dessiner le bouton."""
-        px.rect(self.x, self.y, self.w, self.h, 9)
-        px.rectb(self.x, self.y, self.w, self.h, 2 - self.mouse_over())
+        if self.mouse_over():
+            px.rectb(self.x - 1, self.y - 1, self.w + 2, self.h + 2, 2)
+            px.rect(self.x, self.y, self.w, self.h, 10)
+        else:
+            px.rectb(self.x, self.y, self.w, self.h, 1)
+            px.rect(self.x + 1, self.y + 1, self.w - 2, self.h - 2, 9)
         px.text(x=self.x + self.w // 2 - 2 * len(self.txt) + 1,
                 y=self.y + self.h // 2 - 2,
-                s=self.txt, col=7)
+                s=self.txt, col=1)
 
 
 class ClickableText(Button):
