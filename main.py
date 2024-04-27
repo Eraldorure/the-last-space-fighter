@@ -12,51 +12,29 @@ class App:
     C'est également dans celle-ci que Pyxel fonctionne."""
 
     def __init__(self):
+        self.menu = Menu()
+        self.game_over = GameOver(0, 0)
+        self.credits = Credits()
+        self.game = Game()
+        self.screen = self.menu
+
+    def launch(self):
         px.init(128, 128, title="The Last Space Fighter", fps=60)
         px.load("ndc.pyxres")
-        self.current_screen = 0  # 0 = Menu, 1 = Game, 2 = GameOver, 3 = Credits
-        self.menu = Menu()
-        self.game = Game()
-        self.over = GameOver()
-        self.credits = Credits()
+        px.mouse(True)
         px.run(self.update, self.draw)
 
     def update(self):
-        if self.current_screen == 1:  # Game
-            self.game.update()
-            if self.game.is_game_over:
-                self.current_screen = 2
-                self.over = GameOver(self.game.wave, self.game.score)
-                self.game = Game()
-                px.mouse(True)
-        elif self.current_screen == 2:  # GameOver
-            self.over.update()
-            if self.over.btn_menu.is_pressed():
-                self.current_screen = 0
-            elif self.over.btn_restart.is_pressed():
-                self.current_screen = 1
-                px.mouse(False)
-        elif self.current_screen == 3:  # Credits
-            self.credits.update()
-            if self.credits.btn_menu.is_pressed():
-                self.current_screen = 0
-        else:  # Menu
-            self.menu.update()
-            if self.menu.btn_play.is_pressed():
-                self.current_screen = 1
-                px.mouse(False)
-            elif self.menu.btn_credits.is_pressed():
-                self.current_screen = 3
+        self.screen.update()
 
     def draw(self):
-        if self.current_screen == 1:
-            self.game.draw()
-        elif self.current_screen == 2:
-            self.over.draw()
-        elif self.current_screen == 3:
-            self.credits.draw()
-        else:
-            self.menu.draw()
+        self.screen.draw()
+
+    def end_game(self):
+        self.game_over = GameOver(self.game.wave, self.game.score)
+        self.game = Game()
+        self.screen = self.game_over
+        px.mouse(True)
 
 
 class Menu:
@@ -64,12 +42,16 @@ class Menu:
 
     def __init__(self):
         self.btn_play = ui.Button(40, 68, 45, 11, "JOUER")
-        self.btn_quit = ui.ClickableText(97, 119, "Quitter")
         self.btn_credits = ui.ClickableText(4, 119, "v1.0")
-        px.mouse(True)
+        self.btn_quit = ui.ClickableText(97, 119, "Quitter")
 
     def update(self):
-        if self.btn_quit.is_pressed():
+        if self.btn_play.is_pressed():
+            app.screen = app.game
+            px.mouse(False)
+        elif self.btn_credits.is_pressed():
+            app.screen = app.credits
+        elif self.btn_quit.is_pressed():
             px.quit()
 
     def draw(self):
@@ -83,25 +65,26 @@ class Menu:
 class GameOver:
     """Classe représentant l'écran de Game Over du jeu."""
 
-    def __init__(self, wave: int = 0, score: int = 0):
-        self.btn_menu = ui.Button(10, 80, 50, 11, "MENU")
-        self.btn_restart = ui.Button(68, 80, 50, 11, "REESSAYER")
+    def __init__(self, wave: int, score: int):
+        self.btn_menu = ui.Button(15, 90, 45, 11, "MENU")
+        self.btn_restart = ui.Button(68, 90, 45, 11, "REESSAYER")
         self.wave = wave
         self.score = score
-        px.mouse(True)
 
     def update(self):
-        pass
+        if self.btn_menu.is_pressed():
+            app.screen = app.menu
+        elif self.btn_restart.is_pressed():
+            app.screen = app.game
+            px.mouse(False)
 
     def draw(self):
         px.cls(0)
-        px.text(45, 12, "GAME", 9)
-        px.text(68, 12, "OVER", 9)
-        px.line(16, 30, 111, 30, 2)
-        px.text(41, 44, "Vague", 7)
-        px.text(68, 44, str(self.wave), 7)
-        px.text(41, 54, "Score", 7)
-        px.text(68, 54, str(self.score), 7)
+        px.blt(34, 18, 0, 0, 135, 60, 24, 0)
+        px.text(28, 57, "Vague", 7)
+        px.text(37 - (fn.len_of_int(self.wave) * 4 - 1) // 2, 67, str(self.wave), 7)
+        px.text(81, 57, "Score", 7)
+        px.text(90 - (fn.len_of_int(self.score) * 4 - 1) // 2, 67, str(self.score), 7)
         self.btn_menu.draw()
         self.btn_restart.draw()
 
@@ -113,7 +96,8 @@ class Credits:
         self.btn_menu = ui.ClickableText(69, 119, "Retour au menu")
 
     def update(self):
-        pass
+        if self.btn_menu.is_pressed():
+            app.screen = app.menu
 
     def draw(self):
         px.cls(0)
@@ -122,7 +106,8 @@ class Credits:
         px.text(4, 18, "Version : 1.0", 7)
         px.text(4, 27, "Developpement : Eraldor\n"
                        "                Magistro", 7)
-        px.text(4, 42, "Graphismes : La Nuit du Code", 7)
+        px.text(4, 42, "Graphismes : La Nuit du Code\n"
+                       "             Eraldor", 7)
         px.text(4, 75, "Ce projet a ete realise dans\n"
                        "le cadre de la Nuit du Code\n"
                        "2023 et cette version est une\n"
@@ -145,7 +130,6 @@ class Game:
         self.wave = 0
         self.score = -100
         self.is_reloading = True
-        self.is_game_over = False
 
     def update(self):
         if px.btnp(px.MOUSE_BUTTON_LEFT, repeat=5) and (self.player.x + 4 != px.mouse_x or self.player.y != px.mouse_y) and self.ammo > 0 and not self.is_reloading:
@@ -187,7 +171,9 @@ class Game:
                     bullet.delete()
             if not (0 < bullet.x < 128 and 0 < bullet.y < 128):
                 bullet.delete()
-        self.is_game_over = self.player.hp < 1
+
+        if self.player.hp < 1:
+            app.end_game()
 
     def draw(self):
         px.cls(0)
@@ -227,6 +213,7 @@ class Game:
             self.max_ammo += 5
         elif self.max_ammo != 99:
             self.max_ammo = 99
+        self.is_reloading = True
         new = fn.enemy_amount(self.wave)
         for model, amount in new.items():
             w, h = gp.Enemy.MODELS[model]["size"]
@@ -236,4 +223,5 @@ class Game:
                 self.enemies.append(gp.Enemy(x, y, x, y + 100, model))
 
 
-App()
+app = App()
+app.launch()

@@ -13,8 +13,9 @@ class Hitbox:
         self.w = width
         self.h = height
 
-    def __repr__(self):
-        return f"Hitbox({self.x}, {self.y}, {self.w}, {self.h})"
+    def __bool__(self):
+        """Renvoie True si la hitbox est valide (c'est-à-dire si sa largeur et sa hauteur sont positives) et False sinon."""
+        return self.w > 0 or self.h > 0
 
     def __contains__(self, co: tuple[int, int]):
         """Semblable à la méthode '.contains', à la différence près que cette version s'utilise comme ceci : `(x, y) in hitbox`."""
@@ -50,9 +51,6 @@ class Button:
         self.txt = text
         self.hb = Hitbox(x, y, width, height)
 
-    def __repr__(self):
-        return f"Button({self.x}, {self.y}, {self.w}, {self.h}, {self.txt})"
-
     def is_pressed(self, btn: int = px.MOUSE_BUTTON_LEFT) -> bool:
         """Indique si la souris est située à l'intérieur de la hitbox du bouton et que la touche renseignée (par
         défaut le clic gauche de la souris) est pressée."""
@@ -81,13 +79,10 @@ class ClickableText(Button):
     def __init__(self, x: int, y: int, text: str):
         self.txt = text
         temp = text.splitlines()
-        super().__init__(x, y, max(len(line) for line in temp) * 4 - 1, len(temp) * 6 + 1, text)
-
-    def __repr__(self):
-        return f"ClickableText({self.x}, {self.y}, {self.txt})"
+        super().__init__(x, y, max(len(line) for line in temp) * 4 - 1, len(temp) * 6 - 1, text)
 
     def draw(self):
         col = 1 if self.mouse_over() else 7
         px.text(self.x, self.y, self.txt, col)
         if self.mouse_over():
-            px.line(self.x, y := self.y + self.h - 1, self.x + self.w - 1, y, col)
+            px.line(self.x, y := self.y + self.h + 1, self.x + self.w - 1, y, col)
