@@ -1,5 +1,5 @@
-"""Le fichier principal du projet. Celui-ci consiste en plusieurs classes, chacune représentant une page de
-l'application, exception faite de la classe 'App' qui sert ici de classe principale."""
+"""The project's main file. It consists of multiple classes, each one representing a screen from the game, except for
+the 'App' class that is used to link all the other ones."""
 
 import pyxel as px
 from random import randint
@@ -8,8 +8,8 @@ from code import functions as fn, gameplay as gp, interface as ui
 
 
 class App:
-    """Classe permettant de lier toutes les classes (aka pages) de l'application.
-    C'est également dans celle-ci que Pyxel fonctionne."""
+    """The class tying all the other classes (aka pages or screens) so that it works as an unique application.
+    This class is also the one running the Pyxel instance."""
 
     def __init__(self):
         self.menu = Menu()
@@ -20,7 +20,7 @@ class App:
 
     def launch(self):
         px.init(128, 128, title="The Last Space Fighter", fps=60)
-        px.load("ndc.pyxres")
+        px.load("resources/ndc.pyxres")
         px.mouse(True)
         px.run(self.update, self.draw)
 
@@ -38,12 +38,12 @@ class App:
 
 
 class Menu:
-    """Classe représentant le menu d'accueil du jeu."""
+    """Classe representing the game's home menu."""
 
     def __init__(self):
-        self.btn_play = ui.Button(40, 68, 45, 11, "JOUER")
+        self.btn_play = ui.Button(40, 70, 45, 11, "PLAY")
         self.btn_credits = ui.ClickableText(4, 119, "v1.0")
-        self.btn_quit = ui.ClickableText(97, 119, "Quitter")
+        self.btn_quit = ui.ClickableText(109, 119, "Quit")
 
     def update(self):
         if self.btn_play.is_pressed():
@@ -56,18 +56,18 @@ class Menu:
 
     def draw(self):
         px.cls(0)
-        px.blt(20, 15, 0, 0, 32, 87, 39, 0)
+        px.blt(20, 15, 0, 0, 32, 87, 40, 0)
         self.btn_play.draw()
         self.btn_quit.draw()
         self.btn_credits.draw()
 
 
 class GameOver:
-    """Classe représentant l'écran de Game Over du jeu."""
+    """Classe representing the game's Game Over screen."""
 
     def __init__(self, wave: int, score: int):
         self.btn_menu = ui.Button(15, 90, 45, 11, "MENU")
-        self.btn_restart = ui.Button(68, 90, 45, 11, "REESSAYER")
+        self.btn_restart = ui.Button(68, 90, 45, 11, "RETRY")
         self.wave = wave
         self.score = score
 
@@ -81,19 +81,19 @@ class GameOver:
     def draw(self):
         px.cls(0)
         px.blt(34, 18, 0, 0, 135, 60, 24, 0)
-        px.text(28, 57, "Vague", 7)
-        px.text(37 - (fn.len_of_int(self.wave) * 4 - 1) // 2, 67, str(self.wave), 7)
+        px.text(30, 57, "Wave", 7)
+        px.text(38 - fn.len_of_int(self.wave) * 2, 67, str(self.wave), 7)
         px.text(81, 57, "Score", 7)
-        px.text(90 - (fn.len_of_int(self.score) * 4 - 1) // 2, 67, str(self.score), 7)
+        px.text(91 - fn.len_of_int(self.score) * 2, 67, str(self.score), 7)
         self.btn_menu.draw()
         self.btn_restart.draw()
 
 
 class Credits:
-    """Classe représentant la page des crédits du jeu."""
+    """Class representing the game's credit page."""
 
     def __init__(self):
-        self.btn_menu = ui.ClickableText(69, 119, "Retour au menu")
+        self.btn_menu = ui.ClickableText(77, 119, "Back to Menu")
 
     def update(self):
         if self.btn_menu.is_pressed():
@@ -102,19 +102,20 @@ class Credits:
     def draw(self):
         px.cls(0)
         px.text(50, 4, "CREDITS", 9)
-        px.line(4, 13, 123, 13, 1)
+        px.line(4, 13, 123, 13, 5)
         px.text(4, 18, "Version : 1.0", 7)
-        px.text(4, 27, "Developpement : Eraldor\n"
-                       "                Magistro", 7)
-        px.text(4, 42, "Graphismes : La Nuit du Code\n"
-                       "             Eraldor", 7)
-        px.text(4, 75, "Ce projet a ete realise dans\n"
-                       "le cadre de la Nuit du Code\n"
-                       "2023 et cette version est une\n"
-                       "evolution du travail rendu.\n"
-                       "Le jeu originel est trouvable\n"
-                       "via le depot GitHub du projet.", 7)
-        px.line(4, 114, 123, 114, 1)
+        px.text(4, 27, "Development : Eraldor\n"
+                       "              Magistro", 7)
+        px.text(4, 42, "Visuals : The Nuit du Code\n"
+                       "          Eraldor", 7)
+        px.text(4, 69, "This project was realised\n"
+                       "during the 2023 edition of the\n"
+                       "Nuit du Code and this version\n"
+                       "is an evolution of the\n"
+                       "submitted work. The original\n"
+                       "game can be found in the\n"
+                       "project's GitHub repository.", 7)
+        px.line(4, 114, 123, 114, 5)
         self.btn_menu.draw()
 
 
@@ -156,17 +157,17 @@ class Game:
             self.next_wave()
         for enemy in self.enemies:
             enemy.move()
-            if enemy.y > 128:  # L'ennemi sort de l'écran et est ramené en haut
+            if enemy.y > 128:  # The enemy goes out of the screen and is brought back to the top
                 enemy.y = enemy.hb.y = -enemy.h
                 enemy.t = 0
                 enemy.__origin = enemy.x, enemy.y
-            elif self.player.hb & enemy.hb:  # L'ennemi touche le joueur
+            elif self.player.hb & enemy.hb:  # The enemy touches the player
                 self.player.hp -= 1
                 enemy.hp = enemy.death_score = 0
         for bullet in self.bullets:
             bullet.move()
             for enemy in self.enemies:
-                if not bullet.is_deleted and enemy.hb.contains(bullet.x, bullet.y):  # Un tir touche un ennemi
+                if not bullet.is_deleted and enemy.hb.contains(bullet.x, bullet.y):  # A bullet touches an enemy
                     enemy.hp -= 1
                     bullet.delete()
             if not (0 < bullet.x < 128 and 0 < bullet.y < 128):
@@ -192,7 +193,7 @@ class Game:
         px.text(px.mouse_x - 1, px.mouse_y - 2, "+", 7)
 
     def del_useless(self):
-        """Méthode permettant de supprimer les objets inutiles tels que les ennemis morts ou les tirs sortis de l'écran."""
+        """Method removing bullets marked as deleted as well as dead enemies."""
         i = len(self.bullets) - 1
         while i >= 0:
             if self.bullets[i].is_deleted:
@@ -206,7 +207,8 @@ class Game:
             i -= 1
 
     def next_wave(self):
-        """Méthode permettant de passer à la vague suivante. S'occupe également de créer les ennemis."""
+        """Methods making all the necessary steps to change wave, such as increasing the ammo, the score, the wave and
+        generating enemies (following the fn.enemy_amount function)."""
         self.wave += 1
         self.score += 100
         if self.max_ammo < 95:

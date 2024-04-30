@@ -1,11 +1,11 @@
-"""Fichier contenant tous les éléments d'interface utilisateur tels que les boutons."""
+"""The file containing all the ui elements (such as buttons)."""
 
 import pyxel as px
 
 
 class Hitbox:
-    """Une classe abstraite représentant une hitbox.
-    Cette classe est utilisée par la totalité des objets possédant une quelconque interaction."""
+    """A class representing a hitbox.
+    The class is used by all objects that can be interacted with."""
 
     def __init__(self, x: int, y: int, width: int, height: int):
         self.x = x
@@ -14,16 +14,16 @@ class Hitbox:
         self.h = height
 
     def __bool__(self):
-        """Renvoie True si la hitbox est valide (c'est-à-dire si sa largeur et sa hauteur sont positives) et False sinon."""
-        return self.w > 0 or self.h > 0
+        """Returns either True if the hitbox is valid (aka if both its width and height are strictly positive) or False."""
+        return self.w > 0 and self.h > 0
 
     def __contains__(self, co: tuple[int, int]):
-        """Semblable à la méthode '.contains', à la différence près que cette version s'utilise comme ceci : `(x, y) in hitbox`."""
+        """Similar to the 'contains' method, with the exception that this one is used like : `(x, y) in hitbox`."""
         return self.contains(*co)
 
     def __and__(self, other):
-        """Renvoie un booléen indiquant si deux hitboxes se chevauchent.
-        S'utilise comme suit : `hitbox1 & hitbox2`."""
+        """Returns True if the two hitboxes overlap or False if it isn't the case.
+        To be used as follows : `hitbox1 & hitbox2`."""
         ax = self.x + self.w
         ay = self.y + self.h
         bx = other.x + other.w
@@ -32,16 +32,16 @@ class Hitbox:
             or self.contains(other.x, other.y) or self.contains(other.x, by) or self.contains(bx, other.y) or self.contains(bx, by)
 
     def contains(self, x: int, y: int) -> bool:
-        """Indique si deux coordonnées x et y se situent à l'intérieur de la hitbox."""
+        """Indicates if two coordinates x and y are situated inside the hitbox."""
         return self.x <= x < self.x + self.w and self.y <= y < self.y + self.h
 
     def draw(self, col: int):
-        """Méthode permettant de dessiner la hitbox. N'est utilisée qu'à des fins de débogage."""
+        """Method to draw the hitbox. To be used for debugging purposes."""
         px.rect(self.x, self.y, self.w, self.h, col)
 
 
 class Button:
-    """Une classe permettant de représenter un bouton et d'interagir avec."""
+    """A class representing a button that you can interact with."""
 
     def __init__(self, x: int, y: int, width: int, height: int, text: str = ""):
         self.x = x
@@ -52,29 +52,29 @@ class Button:
         self.hb = Hitbox(x, y, width, height)
 
     def is_pressed(self, btn: int = px.MOUSE_BUTTON_LEFT) -> bool:
-        """Indique si la souris est située à l'intérieur de la hitbox du bouton et que la touche renseignée (par
-        défaut le clic gauche de la souris) est pressée."""
+        """Indicates whether the mouse is inside the button and the given key (left click by default) is pressed.
+        If it's the case, the button is considered as pressed."""
         return px.btnp(btn) and self.mouse_over()
 
     def mouse_over(self) -> bool:
-        """Renvoie True si la souris est en train de survoler le bouton et False sinon."""
+        """Returns either True if the mouse hovers over the button or False."""
         return self.hb.contains(px.mouse_x, px.mouse_y)
 
     def draw(self):
-        """Permet de dessiner le bouton."""
+        """Draws the button."""
         if self.mouse_over():
             px.rectb(self.x - 1, self.y - 1, self.w + 2, self.h + 2, 2)
             px.rect(self.x, self.y, self.w, self.h, 10)
         else:
             px.rectb(self.x, self.y, self.w, self.h, 1)
             px.rect(self.x + 1, self.y + 1, self.w - 2, self.h - 2, 9)
-        px.text(x=self.x + self.w // 2 - 2 * len(self.txt) + 1,
-                y=self.y + self.h // 2 - 2,
-                s=self.txt, col=1)
+        px.text(self.x + self.w // 2 - 2 * len(self.txt) + 1,
+                self.y + self.h // 2 - 2,
+                self.txt, 1)
 
 
 class ClickableText(Button):
-    """Une classe permettant de représenter un texte cliquable. Fonctionne de la même manière qu'un bouton."""
+    """A class representing a clickable text. Works the exact same way a button does"""
 
     def __init__(self, x: int, y: int, text: str):
         self.txt = text
@@ -82,7 +82,9 @@ class ClickableText(Button):
         super().__init__(x, y, max(len(line) for line in temp) * 4 - 1, len(temp) * 6 - 1, text)
 
     def draw(self):
-        col = 1 if self.mouse_over() else 7
-        px.text(self.x, self.y, self.txt, col)
+        """Writes the text. When the mouse hovers over the text, it underlines it."""
         if self.mouse_over():
-            px.line(self.x, y := self.y + self.h + 1, self.x + self.w - 1, y, col)
+            px.text(self.x, self.y, self.txt, 1)
+            px.line(self.x, y := self.y + self.h + 1, self.x + self.w - 1, y, 5)
+        else:
+            px.text(self.x, self.y, self.txt, 7)
