@@ -136,11 +136,11 @@ class Game:
         if px.btnp(px.MOUSE_BUTTON_LEFT, repeat=5) and (self.player.x + 4 != px.mouse_x or self.player.y != px.mouse_y) and self.ammo > 0 and not self.is_reloading:
             self.bullets.append(gp.Bullet(self.player.x + 4, self.player.y, px.mouse_x, px.mouse_y))
             self.ammo -= 1
-        if px.btn(px.KEY_Q) and self.player.x > 2:
+        if (px.btn(px.KEY_Q) or px.btn(px.KEY_A)) and self.player.x > 2:
             self.player.move_left(1)
         if px.btn(px.KEY_D) and self.player.x < 108:
             self.player.move_right(1)
-        if px.btn(px.KEY_Z) and self.player.y > 9:
+        if (px.btn(px.KEY_Z) or px.btn(px.KEY_W)) and self.player.y > 9:
             self.player.move_up(1)
         if px.btn(px.KEY_S) and self.player.y < 119:
             self.player.move_down(1)
