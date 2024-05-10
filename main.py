@@ -1,6 +1,8 @@
 """The project's main file. It consists of multiple classes, each one representing a screen from the game, except for
 the 'App' class that is used to link all the other ones."""
 
+import json
+import webbrowser
 import pyxel as px
 from random import randint
 
@@ -15,12 +17,19 @@ class App:
         self.menu = Menu()
         self.game_over = GameOver(0, 0)
         self.credits = Credits()
+        self.license = LicenseAgreement()
         self.game = Game()
-        self.screen = self.menu
+
+        with open("./data/settings.json", "rb") as file:
+            self.settings = json.load(file)
+        if self.settings["is_first_launch"]:
+            self.screen = self.license
+        else:
+            self.screen = self.menu
 
     def launch(self):
         px.init(128, 128, title="The Last Space Fighter", fps=60)
-        px.load("resources/ndc.pyxres")
+        px.load("./ndc.pyxres")
         px.mouse(True)
         px.run(self.update, self.draw)
 
@@ -29,6 +38,13 @@ class App:
 
     def draw(self):
         self.screen.draw()
+
+    def update_settings(self, modifs: dict = None):
+        if modifs is None:
+            modifs = {}
+        self.settings.update(modifs)
+        with open("./data/settings.json", "w") as file:
+            json.dump(self.settings, file, indent=4)
 
     def end_game(self):
         self.game_over = GameOver(self.game.wave, self.game.score)
@@ -94,16 +110,19 @@ class Credits:
 
     def __init__(self):
         self.btn_menu = ui.ClickableText(77, 119, "Back to Menu")
+        self.btn_see_license = ui.ClickableText(4, 119, "See License")
 
     def update(self):
         if self.btn_menu.is_pressed():
             app.screen = app.menu
+        elif self.btn_see_license.is_pressed():
+            webbrowser.open("https://raw.githubusercontent.com/Eraldorure/ndc-space-fighter/main/LICENSE")
 
     def draw(self):
         px.cls(0)
         px.text(50, 4, "CREDITS", 9)
         px.line(4, 13, 123, 13, 5)
-        px.text(4, 18, "Version : 1.0", 7)
+        px.text(4, 18, "Version : 1.0.0", 7)
         px.text(4, 27, "Development : Eraldor\n"
                        "              Magistro", 7)
         px.text(4, 42, "Visuals : The Nuit du Code\n"
@@ -117,6 +136,46 @@ class Credits:
                        "project's GitHub repository.", 7)
         px.line(4, 114, 123, 114, 5)
         self.btn_menu.draw()
+        self.btn_see_license.draw()
+
+
+class LicenseAgreement:
+    """Class representing the game's license agreement page."""
+
+    def __init__(self):
+        self.btn_agree = ui.Button(4, 104, 120, 11, "I AGREE")
+        self.btn_refuse = ui.ClickableText(101, 119, "Refuse")
+        self.btn_see_license = ui.ClickableText(4, 119, "See License")
+
+    def update(self):
+        if self.btn_agree.is_pressed():
+            app.screen = app.menu
+            app.update_settings({"is_first_launch": False})
+        elif self.btn_refuse.is_pressed():
+            px.quit()
+        elif self.btn_see_license.is_pressed():
+            webbrowser.open("https://raw.githubusercontent.com/Eraldorure/ndc-space-fighter/main/LICENSE")
+
+    def draw(self):
+        px.cls(0)
+        px.text(13, 4, "END USER LICENSE AGREEMENT", 9)
+        px.line(4, 13, 123, 13, 5)
+        px.text(4, 18, "This game is distributed under\n"
+                       "the GPL License.", 7)
+        px.text(4, 33, "You are free to use, modify\n"
+                       "and distribute this game as\n"
+                       "long as you respect the terms\n"
+                       "of the license, which are:\n"
+                       "- Credit where credit is due,\n"
+                       "- Use the same license as the\n"
+                       "  original work.", 7)
+        px.text(4, 78, "For more information, please\n"
+                       "refer to the LICENSE file\n"
+                       "in the game's repository.", 7)
+        px.line(4, 99, 123, 99, 5)
+        self.btn_agree.draw()
+        self.btn_refuse.draw()
+        self.btn_see_license.draw()
 
 
 class Game:
