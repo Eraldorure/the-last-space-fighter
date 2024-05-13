@@ -5,7 +5,6 @@ import json
 import webbrowser
 import pyxel as px
 from random import randint
-
 from code import functions as fn, gameplay as gp, interface as ui
 
 
@@ -116,7 +115,7 @@ class Credits:
         if self.btn_menu.is_pressed():
             app.screen = app.menu
         elif self.btn_see_license.is_pressed():
-            webbrowser.open("https://raw.githubusercontent.com/Eraldorure/ndc-space-fighter/main/LICENSE")
+            webbrowser.open("https://raw.githubusercontent.com/Eraldorure/the-last-space-fighter/main/LICENSE")
 
     def draw(self):
         px.cls(0)
@@ -154,7 +153,7 @@ class LicenseAgreement:
         elif self.btn_refuse.is_pressed():
             px.quit()
         elif self.btn_see_license.is_pressed():
-            webbrowser.open("https://raw.githubusercontent.com/Eraldorure/ndc-space-fighter/main/LICENSE")
+            webbrowser.open("https://raw.githubusercontent.com/Eraldorure/the-last-space-fighter/main/LICENSE")
 
     def draw(self):
         px.cls(0)
@@ -179,7 +178,7 @@ class LicenseAgreement:
 
 
 class Game:
-    """Classe représentant le jeu lui-même."""
+    """Class representing  the game itself."""
 
     def __init__(self):
         self.player = gp.Player(60, 110)

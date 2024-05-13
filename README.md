@@ -1,8 +1,6 @@
-# The Last Space Fighter
+# <img src="./icon.ico"/> The Last Space Fighter
 
 The evolved version of our submission from the 2023 edition of the *Nuit du Code*.
-
-***
 
 
 ## The game
@@ -61,3 +59,9 @@ This game was first made during the 2023 edition of the [Nuit du Code](https://n
 This project belongs to:
 - Thibaud C. ([@Eraldorure](https://github.com/Eraldorure))
 - Romain G. ([@Poulouc](https://github.com/Poulouc))
+
+#### Licensing
+
+This game is licensed under the GNU General Public License v3.0 (or GPLv3).
+This means that you can freely use, modify and distribute this game, as long as you respect the license's terms, which are, in short: credit where credit is due, and keep the same license for your modifications.
+For more details, you can read the full license in the [LICENSE](https://raw.githubusercontent.com/Eraldorure/the-last-space-fighter/main/LICENSE) file.

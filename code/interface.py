@@ -22,14 +22,15 @@ class Hitbox:
         return self.contains(*co)
 
     def __and__(self, other):
-        """Returns True if the two hitboxes overlap or False if it isn't the case.
+        """Returns the overlapping area between two hitboxes.
         To be used as follows : `hitbox1 & hitbox2`."""
-        ax = self.x + self.w
-        ay = self.y + self.h
-        bx = other.x + other.w
-        by = other.y + other.h
-        return other.contains(self.x, self.y) or other.contains(self.x, ay) or other.contains(ax, self.y) or other.contains(ax, ay) \
-            or self.contains(other.x, other.y) or self.contains(other.x, by) or self.contains(bx, other.y) or self.contains(bx, by)
+        if not (self and other):
+            return Hitbox(0, 0, 0, 0)
+        x = max(self.x, other.x)
+        y = max(self.y, other.y)
+        w = min(self.x + self.w, other.x + other.w) - x
+        h = min(self.y + self.h, other.y + other.h) - y
+        return Hitbox(x, y, w, h)
 
     def contains(self, x: int, y: int) -> bool:
         """Indicates if two coordinates x and y are situated inside the hitbox."""
