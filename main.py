@@ -1,10 +1,10 @@
 """The project's main file. It consists of multiple classes, each one representing a screen from the game, except for
 the 'App' class that is used to link all the other ones."""
 
-import json
 import webbrowser
 import pyxel as px
 from random import randint
+from configparser import ConfigParser
 from code import functions as fn, gameplay as gp, interface as ui
 
 
@@ -13,22 +13,27 @@ class App:
     This class is also the one running the Pyxel instance."""
 
     def __init__(self):
+        self.menu = None
+        self.game_over = None
+        self.credits = None
+        self.game = None
+
+        self.screen = None
+        self.settings = ConfigParser()
+        self.settings.read("./data/config.ini")
+
+    def launch(self):
         self.menu = Menu()
-        self.game_over = GameOver(0, 0)
         self.credits = Credits()
-        self.license = LicenseAgreement()
         self.game = Game()
 
-        with open("./data/settings.json", "rb") as file:
-            self.settings = json.load(file)
-        if self.settings["is_first_launch"]:
-            self.screen = self.license
+        if self.settings["Info"]["first_launch"] == "True":
+            self.screen = LicenseAgreement()
         else:
             self.screen = self.menu
 
-    def launch(self):
         px.init(128, 128, title="The Last Space Fighter", fps=60)
-        px.load("./ndc.pyxres")
+        px.load("./data/resources.pyxres")
         px.mouse(True)
         px.run(self.update, self.draw)
 
@@ -38,12 +43,11 @@ class App:
     def draw(self):
         self.screen.draw()
 
-    def update_settings(self, modifs: dict = None):
-        if modifs is None:
-            modifs = {}
-        self.settings.update(modifs)
-        with open("./data/settings.json", "w") as file:
-            json.dump(self.settings, file, indent=4)
+    def update_settings(self, *modifs: tuple[str, str, str]):
+        for section, option, value in modifs:
+            self.settings[section][option] = value
+        with open("./data/config.ini", "w") as file:
+            self.settings.write(file)
 
     def end_game(self):
         self.game_over = GameOver(self.game.wave, self.game.score)
@@ -57,7 +61,7 @@ class Menu:
 
     def __init__(self):
         self.btn_play = ui.Button(40, 70, 45, 11, "PLAY")
-        self.btn_credits = ui.ClickableText(4, 119, "v1.0")
+        self.btn_credits = ui.ClickableText(4, 119, fn.shorten_version(app.settings["Info"]["version"], 2))
         self.btn_quit = ui.ClickableText(109, 119, "Quit")
 
     def update(self):
@@ -121,7 +125,7 @@ class Credits:
         px.cls(0)
         px.text(50, 4, "CREDITS", 9)
         px.line(4, 13, 123, 13, 5)
-        px.text(4, 18, "Version : 1.0.0", 7)
+        px.text(4, 18, f"Version : {app.settings['Info']['version']}", 7)
         px.text(4, 27, "Development : Eraldor\n"
                        "              Magistro", 7)
         px.text(4, 42, "Visuals : The Nuit du Code\n"
@@ -139,7 +143,8 @@ class Credits:
 
 
 class LicenseAgreement:
-    """Class representing the game's license agreement page."""
+    """Class representing the game's license agreement page.
+    This page is only triggered when the game is launched for the first time."""
 
     def __init__(self):
         self.btn_agree = ui.Button(4, 104, 120, 11, "I AGREE")
@@ -149,7 +154,7 @@ class LicenseAgreement:
     def update(self):
         if self.btn_agree.is_pressed():
             app.screen = app.menu
-            app.update_settings({"is_first_launch": False})
+            app.update_settings(("Info", "first_launch", "False"))
         elif self.btn_refuse.is_pressed():
             px.quit()
         elif self.btn_see_license.is_pressed():
