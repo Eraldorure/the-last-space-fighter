@@ -69,5 +69,25 @@ def shorten_version(version: str, level: int) -> str:
     return "".join(temp[:level])
 
 
+def cut_max_text_width(text: str, max_width: int) -> list[str]:
+    """Cuts the text to fit the specified width in multiple lines without cutting words while respecting line breaks.
+    Returns a list containing all the lines."""
+
+    lines = []
+    for line in text.splitlines():
+        if len(line) <= max_width:
+            lines.append(line)
+        else:
+            temp = ""
+            for word in line.split():
+                if len(temp) + len(word) <= max_width:
+                    temp += word + " "
+                else:
+                    lines.append(temp.rstrip())
+                    temp = word + " "
+            lines.append(temp.rstrip())
+    return lines
+
+
 if __name__ == '__main__':  # Test zone
-    print(shorten_version("v2.0.7-alpha.5+amd64", 4))
+    print(cut_max_text_width("Hey!\nThis is a test to see if the function works properly.\nThe good thing is that is apparently does!", 25))

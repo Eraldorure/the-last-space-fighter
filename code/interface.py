@@ -1,6 +1,7 @@
 """The file containing all the ui elements (such as buttons)."""
 
 import pyxel as px
+import code.functions as fn
 
 
 class Hitbox:
@@ -41,15 +42,83 @@ class Hitbox:
         px.rect(self.x, self.y, self.w, self.h, col)
 
 
+class Text:
+    """A class representing a text object.
+    The text represented by this object is static, meaning its position will stay the same when any modification are
+    made. Consequently, the appropriate way to modify anything is to recreate a whole new instance."""
+
+    class Line:
+        """A class representing a line of text."""
+
+        def __init__(self, x: int, y: int, text: str, h_align: str):
+            self.w = len(text) * 4 - 1
+            self.h = 5
+            if h_align == "left":
+                self.x = x
+            elif h_align == "center":
+                self.x = x - self.w // 2
+            else:
+                self.x = x - self.w
+            self.y = y
+            self.txt = text
+            self.hb = Hitbox(self.x, self.y, self.w, self.h + 1)
+
+        def draw(self, color: int):
+            """Draws the line of text."""
+            px.text(self.x, self.y, self.txt, color)
+
+        def draw_underline(self, color: int):
+            """Draws a line under the text."""
+            px.line(self.x, y := self.y + self.h + 1, self.x + self.w - 1, y, color)
+
+    def __init__(self, x: int, y: int, text: str, max_width: int = None,
+                 *, h_align: str = "left", v_align: str = "top"):
+        if h_align not in ("left", "center", "right"):
+            raise ValueError("invalid horizontal alignment, choose between 'left', 'center' and 'right'")
+        if v_align not in ("top", "center", "bottom"):
+            raise ValueError("invalid vertical alignment, choose between 'top', 'center' and 'bottom'")
+
+        if max_width is not None:
+            lines = fn.cut_max_text_width(text, (max_width + 1) // 4)
+        else:
+            lines = text.splitlines()
+        self._txt = text
+        self.w = 0
+        self.h = len(lines) * 6 - 1
+
+        self.x = x
+        self.y = y
+        if v_align == "center":
+            self.y -= self.h // 2
+        elif v_align == "bottom":
+            self.y -= self.h
+
+        self.lines = []
+        for i in range(len(lines)):
+            line = self.Line(x, self.y + i * 6, lines[i], h_align)
+            self.lines.append(line)
+            if line.w > self.w:
+                self.x = line.x
+                self.w = line.w
+
+    def __str__(self):
+        return self._txt
+
+    def draw(self, color: int = 7):
+        """Draws the text. The default color is white."""
+        for line in self.lines:
+            line.draw(color)
+
+
 class Button:
     """A class representing a button that you can interact with."""
 
-    def __init__(self, x: int, y: int, width: int, height: int, text: str = ""):
+    def __init__(self, x: int, y: int, width: int, height: int, text: str):
         self.x = x
         self.y = y
         self.w = width
         self.h = height
-        self.txt = text
+        self.txt = Text(x + width // 2, y + height // 2, text.upper(), width - 1, h_align="center", v_align="center")
         self.hb = Hitbox(x, y, width, height)
 
     def is_pressed(self, btn: int = px.MOUSE_BUTTON_LEFT) -> bool:
@@ -69,23 +138,28 @@ class Button:
         else:
             px.rectb(self.x, self.y, self.w, self.h, 1)
             px.rect(self.x + 1, self.y + 1, self.w - 2, self.h - 2, 9)
-        px.text(self.x + self.w // 2 - 2 * len(self.txt) + 1,
-                self.y + self.h // 2 - 2,
-                self.txt, 1)
+        self.txt.draw(1)
 
 
-class ClickableText(Button):
-    """A class representing a clickable text. Works the exact same way a button does"""
+class ClickableText(Text):
+    """A class representing a clickable text.
+    It could be considered as text reacting the exact same way a button would."""
 
-    def __init__(self, x: int, y: int, text: str):
-        self.txt = text
-        temp = text.splitlines()
-        super().__init__(x, y, max(len(line) for line in temp) * 4 - 1, len(temp) * 6 - 1, text)
+    __str__ = object.__str__
+    is_pressed = Button.is_pressed
 
-    def draw(self):
+    @property
+    def txt(self):
+        return super().__str__()
+
+    def mouse_over(self) -> bool:
+        """Returns either True if the mouse hovers over the text or False."""
+        return any(line.hb.contains(px.mouse_x, px.mouse_y) for line in self.lines)
+
+    def draw(self, color: int = 7):
         """Writes the text. When the mouse hovers over the text, it underlines it."""
         if self.mouse_over():
-            px.text(self.x, self.y, self.txt, 1)
-            px.line(self.x, y := self.y + self.h + 1, self.x + self.w - 1, y, 5)
+            super().draw(1)
+            self.lines[-1].draw_underline(5)
         else:
-            px.text(self.x, self.y, self.txt, 7)
+            super().draw(color)

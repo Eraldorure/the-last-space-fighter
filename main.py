@@ -1,6 +1,7 @@
 """The project's main file. It consists of multiple classes, each one representing a screen from the game, except for
 the 'App' class that is used to link all the other ones."""
 
+import tomllib
 import webbrowser
 import pyxel as px
 from random import randint
@@ -9,30 +10,23 @@ from code import functions as fn, gameplay as gp, interface as ui
 
 
 class App:
-    """The class tying all the other classes (aka pages or screens) so that it works as an unique application.
+    """The class tying all the other classes (aka pages or screens) so that it works as a unique application.
     This class is also the one running the Pyxel instance."""
 
     def __init__(self):
-        self.menu = None
-        self.game_over = None
-        self.credits = None
-        self.game = None
-
-        self.screen = None
-        self.settings = ConfigParser()
-        self.settings.read("./data/config.ini")
-
-    def launch(self):
+        self.game_over = GameOver(0, 0)
         self.menu = Menu()
         self.credits = Credits()
         self.game = Game()
 
-        if self.settings["Info"]["first_launch"] == "True":
+        if settings["Info"]["first_launch"] == "True":
             self.screen = LicenseAgreement()
         else:
             self.screen = self.menu
 
+    def launch(self):
         px.init(128, 128, title="The Last Space Fighter", fps=60)
+        px.icon(["000000000", "000060000", "000070000", "B0076700B", "7067C7607", "796525697", "202999202", "000505000", "000000000"], 5, 0)
         px.load("./data/resources.pyxres")
         px.mouse(True)
         px.run(self.update, self.draw)
@@ -43,12 +37,6 @@ class App:
     def draw(self):
         self.screen.draw()
 
-    def update_settings(self, *modifs: tuple[str, str, str]):
-        for section, option, value in modifs:
-            self.settings[section][option] = value
-        with open("./data/config.ini", "w") as file:
-            self.settings.write(file)
-
     def end_game(self):
         self.game_over = GameOver(self.game.wave, self.game.score)
         self.game = Game()
@@ -56,13 +44,20 @@ class App:
         px.mouse(True)
 
 
+def update_settings(*modifs: tuple[str, str, str]):
+    for section, option, value in modifs:
+        settings[section][option] = value
+    with open("./data/config.ini", "w") as file:
+        settings.write(file)
+
+
 class Menu:
     """Classe representing the game's home menu."""
 
     def __init__(self):
-        self.btn_play = ui.Button(40, 70, 45, 11, "PLAY")
-        self.btn_credits = ui.ClickableText(4, 119, fn.shorten_version(app.settings["Info"]["version"], 2))
-        self.btn_quit = ui.ClickableText(109, 119, "Quit")
+        self.btn_play = ui.Button(40, 70, 45, 11, lang["Menu"]["play"])
+        self.btn_credits = ui.ClickableText(4, 124, fn.shorten_version(settings["Info"]["version"], 2), v_align="bottom")
+        self.btn_quit = ui.ClickableText(124, 124, lang["Menu"]["exit"], h_align="right", v_align="bottom")
 
     def update(self):
         if self.btn_play.is_pressed():
@@ -77,18 +72,20 @@ class Menu:
         px.cls(0)
         px.blt(20, 15, 0, 0, 32, 87, 40, 0)
         self.btn_play.draw()
-        self.btn_quit.draw()
         self.btn_credits.draw()
+        self.btn_quit.draw()
 
 
 class GameOver:
     """Classe representing the game's Game Over screen."""
 
     def __init__(self, wave: int, score: int):
-        self.btn_menu = ui.Button(15, 90, 45, 11, "MENU")
-        self.btn_restart = ui.Button(68, 90, 45, 11, "RETRY")
-        self.wave = wave
-        self.score = score
+        self.btn_menu = ui.Button(15, 90, 45, 11, lang["Over"]["menu"])
+        self.btn_restart = ui.Button(68, 90, 45, 11, lang["Over"]["restart"])
+        self.txt_wave = ui.Text(38, 57, lang["Over"]["wave"], h_align="center")
+        self.txt_wave_count = ui.Text(38, 67, str(wave), h_align="center")
+        self.txt_score = ui.Text(91, 57, lang["Over"]["score"], h_align="center")
+        self.txt_score_count = ui.Text(91, 67, str(score), h_align="center")
 
     def update(self):
         if self.btn_menu.is_pressed():
@@ -100,10 +97,10 @@ class GameOver:
     def draw(self):
         px.cls(0)
         px.blt(34, 18, 0, 0, 135, 60, 24, 0)
-        px.text(30, 57, "Wave", 7)
-        px.text(38 - fn.len_of_int(self.wave) * 2, 67, str(self.wave), 7)
-        px.text(81, 57, "Score", 7)
-        px.text(91 - fn.len_of_int(self.score) * 2, 67, str(self.score), 7)
+        self.txt_wave.draw()
+        self.txt_wave_count.draw()
+        self.txt_score.draw()
+        self.txt_score_count.draw()
         self.btn_menu.draw()
         self.btn_restart.draw()
 
@@ -112,34 +109,31 @@ class Credits:
     """Class representing the game's credit page."""
 
     def __init__(self):
-        self.btn_menu = ui.ClickableText(77, 119, "Back to Menu")
-        self.btn_see_license = ui.ClickableText(4, 119, "See License")
+        self.btn_menu = ui.ClickableText(124, 124, lang["Credits"]["menu"], h_align="right", v_align="bottom")
+        self.btn_license = ui.ClickableText(4, 124, lang["Credits"]["license"], v_align="bottom")
+        self.txt_title = ui.Text(64, 4, lang["Credits"]["title"], h_align="center")
+        self.txt_version = ui.Text(4, 18, lang["Credits"]["version"].format(VER=settings["Info"]["version"]))
+        self.txt_dev = ui.Text(4, 27, lang["Credits"]["dev"])
+        self.txt_visuals = ui.Text(4, 42, lang["Credits"]["visuals"])
+        self.txt_content = ui.Text(4, 110, lang["Credits"]["context"], 120, v_align="bottom")
 
     def update(self):
         if self.btn_menu.is_pressed():
             app.screen = app.menu
-        elif self.btn_see_license.is_pressed():
+        elif self.btn_license.is_pressed():
             webbrowser.open("https://raw.githubusercontent.com/Eraldorure/the-last-space-fighter/main/LICENSE")
 
     def draw(self):
         px.cls(0)
-        px.text(50, 4, "CREDITS", 9)
+        self.txt_title.draw(9)
         px.line(4, 13, 123, 13, 5)
-        px.text(4, 18, f"Version : {app.settings['Info']['version']}", 7)
-        px.text(4, 27, "Development : Eraldor\n"
-                       "              Magistro", 7)
-        px.text(4, 42, "Visuals : The Nuit du Code\n"
-                       "          Eraldor", 7)
-        px.text(4, 69, "This project was realised\n"
-                       "during the 2023 edition of the\n"
-                       "Nuit du Code and this version\n"
-                       "is an evolution of the\n"
-                       "submitted work. The original\n"
-                       "game can be found in the\n"
-                       "project's GitHub repository.", 7)
+        self.txt_version.draw()
+        self.txt_dev.draw()
+        self.txt_visuals.draw()
+        self.txt_content.draw()
         px.line(4, 114, 123, 114, 5)
         self.btn_menu.draw()
-        self.btn_see_license.draw()
+        self.btn_license.draw()
 
 
 class LicenseAgreement:
@@ -147,43 +141,38 @@ class LicenseAgreement:
     This page is only triggered when the game is launched for the first time."""
 
     def __init__(self):
-        self.btn_agree = ui.Button(4, 104, 120, 11, "I AGREE")
-        self.btn_refuse = ui.ClickableText(101, 119, "Refuse")
-        self.btn_see_license = ui.ClickableText(4, 119, "See License")
+        self.btn_agree = ui.Button(4, 104, 120, 11, lang["License"]["agree"])
+        self.btn_refuse = ui.ClickableText(124, 124, lang["License"]["refuse"], h_align="right", v_align="bottom")
+        self.btn_license = ui.ClickableText(4, 124, lang["License"]["license"], v_align="bottom")
+        self.txt_title = ui.Text(64, 4, lang["License"]["title"], h_align="center")
+        self.txt_parag1 = ui.Text(4, 18, lang["License"]["parag1"], 120)
+        self.txt_parag2 = ui.Text(4, 33, lang["License"]["parag2"], 120)
+        self.txt_parag3 = ui.Text(4, 78, lang["License"]["parag3"], 120)
 
     def update(self):
         if self.btn_agree.is_pressed():
             app.screen = app.menu
-            app.update_settings(("Info", "first_launch", "False"))
+            update_settings(("Info", "first_launch", "False"))
         elif self.btn_refuse.is_pressed():
             px.quit()
-        elif self.btn_see_license.is_pressed():
+        elif self.btn_license.is_pressed():
             webbrowser.open("https://raw.githubusercontent.com/Eraldorure/the-last-space-fighter/main/LICENSE")
 
     def draw(self):
         px.cls(0)
-        px.text(13, 4, "END USER LICENSE AGREEMENT", 9)
+        self.txt_title.draw(9)
         px.line(4, 13, 123, 13, 5)
-        px.text(4, 18, "This game is distributed under\n"
-                       "the GPL License.", 7)
-        px.text(4, 33, "You are free to use, modify\n"
-                       "and distribute this game as\n"
-                       "long as you respect the terms\n"
-                       "of the license, which are:\n"
-                       "- Credit where credit is due,\n"
-                       "- Use the same license as the\n"
-                       "  original work.", 7)
-        px.text(4, 78, "For more information, please\n"
-                       "refer to the LICENSE file\n"
-                       "in the game's repository.", 7)
+        self.txt_parag1.draw()
+        self.txt_parag2.draw()
+        self.txt_parag3.draw()
         px.line(4, 99, 123, 99, 5)
         self.btn_agree.draw()
         self.btn_refuse.draw()
-        self.btn_see_license.draw()
+        self.btn_license.draw()
 
 
 class Game:
-    """Class representing  the game itself."""
+    """Class representing the game itself."""
 
     def __init__(self):
         self.player = gp.Player(60, 110)
@@ -194,6 +183,8 @@ class Game:
         self.wave = 0
         self.score = -100
         self.is_reloading = True
+        self.txt_wave_count = ui.Text(64, 2, "1", h_align="center")
+        self.txt_score_count = ui.Text(126, 2, "0", h_align="right")
 
     def update(self):
         if px.btnp(px.MOUSE_BUTTON_LEFT, repeat=5) and (self.player.x + 4 != px.mouse_x or self.player.y != px.mouse_y) and self.ammo > 0 and not self.is_reloading:
@@ -251,9 +242,14 @@ class Game:
         px.rectb(119, 64, 7, 62, 7)
         px.rect(120, 65, 5, round(fn.remap(0, self.max_ammo, 0, 60, self.ammo)), 10)
         px.text(119, 57, f"{self.ammo:02}", 7)
-        px.text(107, 2, f"{self.score: 5}", 7)
-        px.text(65 - 2 * int(fn.len_of_int(self.wave)), 2, str(self.wave), 7)
+        self.txt_wave_count.draw()
+        self.txt_score_count.draw()
         px.text(px.mouse_x - 1, px.mouse_y - 2, "+", 7)
+
+    def change_score(self, value: int):
+        """Adds the given value to the score. If the value is negative, the score will be decreased."""
+        self.score += value
+        self.txt_score_count = ui.Text(126, 2, str(self.score), h_align="right")
 
     def del_useless(self):
         """Method removing bullets marked as deleted as well as dead enemies."""
@@ -265,7 +261,7 @@ class Game:
         i = len(self.enemies) - 1
         while i >= 0:
             if self.enemies[i].is_dead:
-                self.score += self.enemies[i].death_score
+                self.change_score(self.enemies[i].death_score)
                 del self.enemies[i]
             i -= 1
 
@@ -273,7 +269,8 @@ class Game:
         """Methods making all the necessary steps to change wave, such as increasing the ammo, the score, the wave and
         generating enemies (following the fn.enemy_amount function)."""
         self.wave += 1
-        self.score += 100
+        self.txt_wave_count = ui.Text(64, 2, str(self.wave), h_align="center")
+        self.change_score(100)
         if self.max_ammo < 95:
             self.max_ammo += 5
         elif self.max_ammo != 99:
@@ -288,5 +285,12 @@ class Game:
                 self.enemies.append(gp.Enemy(x, y, x, y + 100, model))
 
 
-app = App()
-app.launch()
+if __name__ == '__main__':
+    settings = ConfigParser(allow_no_value=True, comment_prefixes="/")
+    settings.read("./data/config.ini")
+
+    with open(f"./data/languages/{settings['Options']['language']}.toml", "rb") as file:
+        lang = tomllib.load(file)
+
+    app = App()
+    app.launch()

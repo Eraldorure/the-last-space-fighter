@@ -2,7 +2,6 @@
 
 import pyxel as px
 from random import randint
-
 import code.functions as fn
 from code.interface import Hitbox
 
