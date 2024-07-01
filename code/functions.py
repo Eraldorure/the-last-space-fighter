@@ -42,18 +42,6 @@ def enemy_amount(wave: int) -> dict[str, int]:
             "big": 0 if wave < 10 else int(0.8 * wave - 8 + randint(-1, 1))}
 
 
-def len_of_int(number: int, include_sign: bool = False) -> int:
-    """Returns the amount of digits that compose the specified integer.
-    The 'include_sign' option indicates whether to count the sign as a digit when the number is negative."""
-
-    if number == 0:
-        return 1
-    elif number > 0:
-        return int(math.log10(number)) + 1
-    else:
-        return int(math.log10(-number)) + include_sign + 1
-
-
 def shorten_version(version: str, level: int) -> str:
     """Shortens the version string to the specified level."""
 

@@ -9,6 +9,18 @@ from configparser import ConfigParser
 from code import functions as fn, gameplay as gp, interface as ui
 
 
+def update_settings(*modifs: tuple[str, str, str]):
+    for section, option, value in modifs:
+        settings[section][option] = value
+    with open("./data/config.ini", "w") as file:
+        settings.write(file)
+
+
+def reload_language(var: dict):
+    with open(f"./data/languages/{settings['options']['language']}.toml", "rb") as file:
+        var.update(tomllib.load(file))
+
+
 class App:
     """The class tying all the other classes (aka pages or screens) so that it works as a unique application.
     This class is also the one running the Pyxel instance."""
@@ -17,9 +29,10 @@ class App:
         self.game_over = GameOver(0, 0)
         self.menu = Menu()
         self.credits = Credits()
+        self.options = Options()
         self.game = Game()
 
-        if settings["Info"]["first_launch"] == "True":
+        if settings["info"]["first_launch"] == "yes":
             self.screen = LicenseAgreement()
         else:
             self.screen = self.menu
@@ -31,11 +44,12 @@ class App:
         px.mouse(True)
         px.run(self.update, self.draw)
 
-    def update(self):
-        self.screen.update()
-
-    def draw(self):
-        self.screen.draw()
+    def reload(self):
+        reload_language(lang)
+        self.menu = Menu()
+        self.credits = Credits()
+        self.options = Options()
+        self.game = Game()
 
     def end_game(self):
         self.game_over = GameOver(self.game.wave, self.game.score)
@@ -43,21 +57,21 @@ class App:
         self.screen = self.game_over
         px.mouse(True)
 
+    def update(self):
+        self.screen.update()
 
-def update_settings(*modifs: tuple[str, str, str]):
-    for section, option, value in modifs:
-        settings[section][option] = value
-    with open("./data/config.ini", "w") as file:
-        settings.write(file)
+    def draw(self):
+        self.screen.draw()
 
 
 class Menu:
     """Classe representing the game's home menu."""
 
     def __init__(self):
-        self.btn_play = ui.Button(40, 70, 45, 11, lang["Menu"]["play"])
-        self.btn_credits = ui.ClickableText(4, 124, fn.shorten_version(settings["Info"]["version"], 2), v_align="bottom")
-        self.btn_quit = ui.ClickableText(124, 124, lang["Menu"]["exit"], h_align="right", v_align="bottom")
+        self.btn_play = ui.Button(41, 69, 47, 13, lang["menu"]["play"])
+        self.btn_options = ui.ClickableText(64, 87, lang["menu"]["options"], h_align="center")
+        self.btn_credits = ui.ClickableText(4, 124, fn.shorten_version(settings["info"]["version"], 2), v_align="bottom")
+        self.btn_quit = ui.ClickableText(124, 124, lang["menu"]["exit"], h_align="right", v_align="bottom")
 
     def update(self):
         if self.btn_play.is_pressed():
@@ -65,14 +79,17 @@ class Menu:
             px.mouse(False)
         elif self.btn_credits.is_pressed():
             app.screen = app.credits
+        elif self.btn_options.is_pressed():
+            app.screen = app.options
         elif self.btn_quit.is_pressed():
             px.quit()
 
     def draw(self):
         px.cls(0)
-        px.blt(20, 15, 0, 0, 32, 87, 40, 0)
+        px.blt(21, 15, 0, 0, 32, 87, 40, 0)
         self.btn_play.draw()
         self.btn_credits.draw()
+        self.btn_options.draw()
         self.btn_quit.draw()
 
 
@@ -80,11 +97,11 @@ class GameOver:
     """Classe representing the game's Game Over screen."""
 
     def __init__(self, wave: int, score: int):
-        self.btn_menu = ui.Button(15, 90, 45, 11, lang["Over"]["menu"])
-        self.btn_restart = ui.Button(68, 90, 45, 11, lang["Over"]["restart"])
-        self.txt_wave = ui.Text(38, 57, lang["Over"]["wave"], h_align="center")
+        self.btn_menu = ui.Button(15, 90, 45, 11, lang["over"]["menu"])
+        self.btn_restart = ui.Button(68, 90, 45, 11, lang["over"]["retry"])
+        self.txt_wave = ui.Text(38, 57, lang["over"]["wave"], h_align="center")
         self.txt_wave_count = ui.Text(38, 67, str(wave), h_align="center")
-        self.txt_score = ui.Text(91, 57, lang["Over"]["score"], h_align="center")
+        self.txt_score = ui.Text(91, 57, lang["over"]["score"], h_align="center")
         self.txt_score_count = ui.Text(91, 67, str(score), h_align="center")
 
     def update(self):
@@ -109,13 +126,13 @@ class Credits:
     """Class representing the game's credit page."""
 
     def __init__(self):
-        self.btn_menu = ui.ClickableText(124, 124, lang["Credits"]["menu"], h_align="right", v_align="bottom")
-        self.btn_license = ui.ClickableText(4, 124, lang["Credits"]["license"], v_align="bottom")
-        self.txt_title = ui.Text(64, 4, lang["Credits"]["title"], h_align="center")
-        self.txt_version = ui.Text(4, 18, lang["Credits"]["version"].format(VER=settings["Info"]["version"]))
-        self.txt_dev = ui.Text(4, 27, lang["Credits"]["dev"])
-        self.txt_visuals = ui.Text(4, 42, lang["Credits"]["visuals"])
-        self.txt_content = ui.Text(4, 110, lang["Credits"]["context"], 120, v_align="bottom")
+        self.btn_menu = ui.ClickableText(124, 124, lang["credits"]["back"], h_align="right", v_align="bottom")
+        self.btn_license = ui.ClickableText(4, 124, lang["credits"]["see_lic"], v_align="bottom")
+        self.txt_title = ui.Text(64, 4, lang["credits"]["title"], h_align="center")
+        self.txt_version = ui.Text(4, 18, lang["credits"]["ver"].format(VER=settings["info"]["version"]))
+        self.txt_dev = ui.Text(4, 27, lang["credits"]["dev"])
+        self.txt_visuals = ui.Text(4, 42, lang["credits"]["visu"])
+        self.txt_content = ui.Text(4, 110, lang["credits"]["context"], 120, v_align="bottom")
 
     def update(self):
         if self.btn_menu.is_pressed():
@@ -136,23 +153,54 @@ class Credits:
         self.btn_license.draw()
 
 
+class Options:
+    """Class representing the customization screen.
+    For now, it only allows for changing the language, but expect more to come."""
+
+    def __init__(self):
+        self.btn_apply = ui.ClickableText(124, 124, lang["options"]["apply"], h_align="right", v_align="bottom")
+        self.btn_cancel = ui.ClickableText(4, 124, lang["options"]["cancel"], v_align="bottom")
+        self.drop_lang = ui.DropdownSelector(64, 18, lang["options"]["lang"]["lang_select"], settings["options"]["language"])
+        self.txt_title = ui.Text(64, 4, lang["options"]["title"], h_align="center")
+        self.txt_lang = ui.Text(4, 18, lang["options"]["lang"]["lang"])
+
+    def update(self):
+        self.drop_lang.update()
+        if self.btn_cancel.is_pressed():
+            app.screen = app.menu
+        elif self.btn_apply.is_pressed():
+            update_settings(("options", "language", self.drop_lang.selected))
+            app.reload()
+            app.screen = app.menu
+
+    def draw(self):
+        px.cls(0)
+        self.txt_title.draw(9)
+        px.line(4, 13, 123, 13, 5)
+        self.txt_lang.draw()
+        self.drop_lang.draw()
+        px.line(4, 114, 123, 114, 5)
+        self.btn_apply.draw()
+        self.btn_cancel.draw()
+
+
 class LicenseAgreement:
     """Class representing the game's license agreement page.
     This page is only triggered when the game is launched for the first time."""
 
     def __init__(self):
-        self.btn_agree = ui.Button(4, 104, 120, 11, lang["License"]["agree"])
-        self.btn_refuse = ui.ClickableText(124, 124, lang["License"]["refuse"], h_align="right", v_align="bottom")
-        self.btn_license = ui.ClickableText(4, 124, lang["License"]["license"], v_align="bottom")
-        self.txt_title = ui.Text(64, 4, lang["License"]["title"], h_align="center")
-        self.txt_parag1 = ui.Text(4, 18, lang["License"]["parag1"], 120)
-        self.txt_parag2 = ui.Text(4, 33, lang["License"]["parag2"], 120)
-        self.txt_parag3 = ui.Text(4, 78, lang["License"]["parag3"], 120)
+        self.btn_agree = ui.Button(4, 104, 120, 11, lang["license"]["yes"])
+        self.btn_refuse = ui.ClickableText(124, 124, lang["license"]["no"], h_align="right", v_align="bottom")
+        self.btn_license = ui.ClickableText(4, 124, lang["license"]["see_lic"], v_align="bottom")
+        self.txt_title = ui.Text(64, 4, lang["license"]["title"], h_align="center")
+        self.txt_parag1 = ui.Text(4, 18, lang["license"]["p1"], 120)
+        self.txt_parag2 = ui.Text(4, 33, lang["license"]["p2"], 120)
+        self.txt_parag3 = ui.Text(4, 78, lang["license"]["p3"], 120)
 
     def update(self):
         if self.btn_agree.is_pressed():
             app.screen = app.menu
-            update_settings(("Info", "first_launch", "False"))
+            update_settings(("info", "first_launch", "no"))
         elif self.btn_refuse.is_pressed():
             px.quit()
         elif self.btn_license.is_pressed():
@@ -285,12 +333,11 @@ class Game:
                 self.enemies.append(gp.Enemy(x, y, x, y + 100, model))
 
 
+settings = ConfigParser(allow_no_value=True, comment_prefixes="/")
+settings.read("./data/config.ini")
+lang = {}
+reload_language(lang)
+app = App()
+
 if __name__ == '__main__':
-    settings = ConfigParser(allow_no_value=True, comment_prefixes="/")
-    settings.read("./data/config.ini")
-
-    with open(f"./data/languages/{settings['Options']['language']}.toml", "rb") as file:
-        lang = tomllib.load(file)
-
-    app = App()
     app.launch()

@@ -1,0 +1,58 @@
+lang = "fr"
+
+
+[menu]
+
+play = "Jouer"
+exit = "Quitter"
+options = "Options"
+
+
+[over]
+
+score = "Score"
+wave = "Vague"
+menu = "Menu"
+retry = "Reessayer"
+
+
+[credits]
+
+title = "CREDITS"
+ver = "Version : {VER}"
+dev = """
+Developpement : Eraldor
+                Magistro"""
+visu = """
+Graphismes : La Nuit du Code
+             Eraldor"""
+context = """
+Ce projet a ete realise durant la Nuit du Code, et cette version est une evolution du travail rendu. \
+Le jeu originel peut etre trouve sur le depot GitHub du projet."""
+see_lic = "Voir licence"
+back = "Retour au menu"
+
+
+[options]
+
+title = "PARAMETRES"
+apply = "Valider"
+cancel = "Annuler"
+
+    [options.lang]
+    lang = "Langue"
+    lang_select = {"en" = "Anglais", "fr" = "Francais"}
+
+
+[license]
+
+title = "CONTRAT DE LICENCE UTILISATEUR"
+p1 = "Ce jeu est fourni sous licence GPLv3."
+p2 = """
+Vous etes libre d'utiliser, modifier et partager ce jeu tant que vous respectez les termes de la licence, soit :
+- Creditez les auteurs d'origine ;
+- Conservez la meme licence."""
+p3 = "Pour davantage d'informations, vous pouvez consulter le fichier LICENSE."
+yes = "J'accepte"
+no = "Refuser"
+see_lic = "Voir la licence"

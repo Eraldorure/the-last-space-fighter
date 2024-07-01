@@ -1,38 +1,58 @@
 lang = "en"
 
-[Menu]
+
+[menu]
+
 play = "Play"
 exit = "Exit"
+options = "Options"
 
-[Over]
+
+[over]
+
 score = "Score"
 wave = "Wave"
 menu = "Menu"
-restart = "Retry"
+retry = "Retry"
 
-[Credits]
+
+[credits]
+
 title = "CREDITS"
-version = "Version: {VER}"
+ver = "Version: {VER}"
 dev = """
 Development: Eraldor
              Magistro"""
-visuals = """
+visu = """
 Visuals: The Nuit du Code
          Eraldor"""
 context = """
 This project was realised during the 2023 edition of the Nuit du Code and this version is an evolution of the submitted work. \
 The original game can be found in the project's GitHub repository."""
-license = "See License"
-menu = "Back to Menu"
+see_lic = "See License"
+back = "Back to Menu"
 
-[License]
+
+[options]
+
+title = "SETTINGS"
+apply = "Apply changes"
+cancel = "Cancel"
+
+    [options.lang]
+    lang = "Language"
+    lang_select = {"en" = "English", "fr" = "French"}
+
+
+[license]
+
 title = "END USER LICENSE AGREEMENT"
-parag1 = "This game is distributed under the GPLv3 license."
-parag2 = """
+p1 = "This game is distributed under the GPLv3 license."
+p2 = """
 You are free to use, modify and distribute this game as long as you respect the terms of the license, which are:
 - Credit where credit is due,
 - Keep the same license for your modifications."""
-parag3 = "For more information, please refer to the LICENSE file in the game's repository."
-agree = "I Agree"
-refuse = "Refuse"
-license = "See License"
+p3 = "For more information, please refer to the LICENSE file in the game's repository."
+yes = "I Agree"
+no = "Refuse"
+see_lic = "See License"

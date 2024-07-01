@@ -163,3 +163,77 @@ class ClickableText(Text):
             self.lines[-1].draw_underline(5)
         else:
             super().draw(color)
+
+
+class DropdownSelector:
+    """A class representing a dropdown selector.
+    It allows the user to select an option from a list of options."""
+
+    def __init__(self, x: int, y: int, options: dict[str, str], default_opt: str):
+        """The options argument should be a dict associating the effective value of the option with its display name."""
+        self.expanded = False
+        self.options = {key: Text(x, y + i * 7, name) for i, (key, name) in enumerate(options.items())}
+        self.selected = default_opt
+        self.txt_selected = Text(x, y, options[default_opt])
+        self.x = x
+        self.y = y
+        self.w = self.txt_selected.w
+        self.h = 5
+        self.hb0 = Hitbox(x, y, self.w, 6)
+        self._width = max(txt.w for txt in self.options.values())
+        self._height = len(options) * 7 - 2
+
+    def mouse_over_which(self) -> str:
+        """Returns the index of the option the mouse is over, or an empty string if it's not over any."""
+        if self.expanded:
+            for i, opt in enumerate(self.options):
+                if self.options[opt].lines[0].hb.contains(px.mouse_x, px.mouse_y):
+                    return opt
+            return ""
+        elif self.hb0.contains(px.mouse_x, px.mouse_y):
+            return self.selected
+        return ""
+
+    def which_pressed(self) -> str:
+        """Returns the index of the option that was pressed, or an empty string if no option was pressed."""
+        if px.btnp(px.MOUSE_BUTTON_LEFT):
+            return self.mouse_over_which()
+        return ""
+
+    def toggle_expand(self):
+        """Toggles the expanded status of the dropdown selector."""
+        self.expanded = not self.expanded
+        if self.expanded:
+            self.w = self._width
+            self.h = self._height
+        else:
+            self.w = self.txt_selected.w
+            self.h = 5
+            self.hb0.w = self.w
+
+    def update(self):
+        """Updates the dropdown selector."""
+        opt = self.which_pressed()
+        if opt:
+            if self.expanded:
+                self.selected = opt
+                self.txt_selected = Text(self.x, self.y, str(self.options[opt]))
+            self.toggle_expand()
+
+    def draw(self):
+        """Draws the dropdown selector."""
+        mouse_over = self.mouse_over_which()
+        px.line(x := self.x - 3, self.y - 1, x, self.y + self.h, 1)
+        if self.expanded:
+            px.rect(self.x - 2, self.y - 1, self.w + 3, self.h + 2, 0)
+            for opt, txt in self.options.items():
+                if opt == mouse_over:
+                    txt.draw(2)
+                elif opt == self.selected:
+                    txt.draw(1)
+                else:
+                    txt.draw()
+        elif mouse_over:
+            self.txt_selected.draw(2)
+        else:
+            self.txt_selected.draw()
