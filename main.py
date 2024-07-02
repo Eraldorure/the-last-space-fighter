@@ -168,6 +168,7 @@ class Options:
         self.drop_lang.update()
         if self.btn_cancel.is_pressed():
             app.screen = app.menu
+            app.options = Options()
         elif self.btn_apply.is_pressed():
             update_settings(("options", "language", self.drop_lang.selected))
             app.reload()
