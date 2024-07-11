@@ -1,7 +1,6 @@
 """A few small functions used throughout the project."""
 
 import math
-from random import randint
 
 
 def lerp(a: float, b: float, t: float) -> float:
@@ -34,14 +33,6 @@ def t_step(xa: int, ya: int, xb: int, yb: int) -> float:
     return 1 / math.sqrt((xb - xa) ** 2 + (yb - ya) ** 2)
 
 
-def enemy_amount(wave: int) -> dict[str, int]:
-    """Indicates the amount of enemies to be spawned in the specified wave."""
-
-    return {"small": int((-4 / wave + 6 if wave < 4 else (wave + 2) / 3 + 3) * randint(1, 3) / 2),
-            "normal": 0 if wave < 2 else int((math.sqrt(wave - 2) if wave < 11 else 0.2 * (11 - wave) ** 2 + 3) * randint(1, 3) / 2),
-            "big": 0 if wave < 10 else int(0.8 * wave - 8 + randint(-1, 1))}
-
-
 def shorten_version(version: str, level: int) -> str:
     """Shortens the version string to the specified level."""
 
@@ -49,10 +40,10 @@ def shorten_version(version: str, level: int) -> str:
     for i in range(1, len(temp)):
         temp[i] = "." + temp[i]
     if "-" in temp[-1]:
-        temp.extend(temp.pop().split("-"))
+        temp.extend(temp.pop().split("-", 1))
         temp[-1] = "-" + temp[-1]
     if "+" in temp[-1]:
-        temp.extend(temp.pop().split("+"))
+        temp.extend(temp.pop().split("+", 1))
         temp[-1] = "+" + temp[-1]
     return "".join(temp[:level])
 
@@ -75,6 +66,12 @@ def cut_max_text_width(text: str, max_width: int) -> list[str]:
                     temp = word + " "
             lines.append(temp.rstrip())
     return lines
+
+
+def sign(number: float) -> int:
+    """Returns the sign of the number (-1, 0 or 1)."""
+
+    return (number > 0) - (number < 0)
 
 
 if __name__ == '__main__':  # Test zone

@@ -3,13 +3,16 @@ the 'App' class that is used to link all the other ones."""
 
 import tomllib
 import webbrowser
-import pyxel as px
 from random import randint
 from configparser import ConfigParser
+
+import pyxel as px
 from code import functions as fn, gameplay as gp, interface as ui
 
 
 def update_settings(*modifs: tuple[str, str, str]):
+    """Updates the settings file with the given modifications."""
+
     for section, option, value in modifs:
         settings[section][option] = value
     with open("./data/config.ini", "w") as file:
@@ -17,8 +20,13 @@ def update_settings(*modifs: tuple[str, str, str]):
 
 
 def reload_language(var: dict):
-    with open(f"./data/languages/{settings['options']['language']}.toml", "rb") as file:
-        var.update(tomllib.load(file))
+    """Updates the language dictionary with the content of the language file."""
+
+    try:
+        with open(f"./data/languages/{settings['options']['language']}.toml", "rb") as file:
+            var.update(tomllib.load(file))
+    except FileNotFoundError:
+        raise ValueError(f"unknown language '{settings['options']['language']}'")
 
 
 class App:
@@ -227,46 +235,31 @@ class Game:
         self.player = gp.Player(60, 110)
         self.enemies = []
         self.bullets = []
-        self.ammo = 0
-        self.max_ammo = 5
         self.wave = 0
-        self.score = -100
-        self.is_reloading = True
+        self.score = -100  # So the score is 0 at the beginning (since new wave = +100)
         self.txt_wave_count = ui.Text(64, 2, "1", h_align="center")
         self.txt_score_count = ui.Text(126, 2, "0", h_align="right")
 
     def update(self):
-        if px.btnp(px.MOUSE_BUTTON_LEFT, repeat=5) and (self.player.x + 4 != px.mouse_x or self.player.y != px.mouse_y) and self.ammo > 0 and not self.is_reloading:
+        if px.btnp(px.MOUSE_BUTTON_LEFT, repeat=5) and (self.player.x + 4 != px.mouse_x or self.player.y != px.mouse_y):
             self.bullets.append(gp.Bullet(self.player.x + 4, self.player.y, px.mouse_x, px.mouse_y))
-            self.ammo -= 1
         if (px.btn(px.KEY_Q) or px.btn(px.KEY_A)) and self.player.x > 2:
-            self.player.move_left(1)
-        if px.btn(px.KEY_D) and self.player.x < 108:
-            self.player.move_right(1)
+            self.player.move_left()
+        if px.btn(px.KEY_D) and self.player.x < 117:  # 108
+            self.player.move_right()
         if (px.btn(px.KEY_Z) or px.btn(px.KEY_W)) and self.player.y > 9:
-            self.player.move_up(1)
+            self.player.move_up()
         if px.btn(px.KEY_S) and self.player.y < 119:
-            self.player.move_down(1)
-
-        if self.ammo < 1 and not self.is_reloading:
-            self.is_reloading = True
-        if self.is_reloading and self.ammo < self.max_ammo and px.frame_count % 1.5:
-            self.ammo += 1
-        elif self.ammo == self.max_ammo:
-            self.is_reloading = False
+            self.player.move_down()
 
         self.del_useless()
         if not self.enemies:
             self.next_wave()
         for enemy in self.enemies:
-            enemy.move()
-            if enemy.y > 128:  # The enemy goes out of the screen and is brought back to the top
-                enemy.y = enemy.hb.y = -enemy.h
-                enemy.t = 0
-                enemy.__origin = enemy.x, enemy.y
-            elif self.player.hb & enemy.hb:  # The enemy touches the player
+            enemy.move(self.player.x + 4, self.player.y + 3)
+            if self.player.hb & enemy.hb:  # The enemy touches the player
                 self.player.hp -= 1
-                enemy.hp = enemy.death_score = 0
+                enemy.delete()
         for bullet in self.bullets:
             bullet.move()
             for enemy in self.enemies:
@@ -276,7 +269,7 @@ class Game:
             if not (0 < bullet.x < 128 and 0 < bullet.y < 128):
                 bullet.delete()
 
-        if self.player.hp < 1:
+        if self.player.is_dead:
             app.end_game()
 
     def draw(self):
@@ -288,9 +281,6 @@ class Game:
         for i in range(self.player.hp):
             px.blt(2 + 8 * i, 1, 0, 0, 18, 7, 6, 0)
         self.player.draw()
-        px.rectb(119, 64, 7, 62, 7)
-        px.rect(120, 65, 5, round(fn.remap(0, self.max_ammo, 0, 60, self.ammo)), 10)
-        px.text(119, 57, f"{self.ammo:02}", 7)
         self.txt_wave_count.draw()
         self.txt_score_count.draw()
         px.text(px.mouse_x - 1, px.mouse_y - 2, "+", 7)
@@ -320,18 +310,13 @@ class Game:
         self.wave += 1
         self.txt_wave_count = ui.Text(64, 2, str(self.wave), h_align="center")
         self.change_score(100)
-        if self.max_ammo < 95:
-            self.max_ammo += 5
-        elif self.max_ammo != 99:
-            self.max_ammo = 99
-        self.is_reloading = True
-        new = fn.enemy_amount(self.wave)
-        for model, amount in new.items():
-            w, h = gp.Enemy.MODELS[model]["size"]
-            for _ in range(amount):
-                x = randint(2, 117 - w)
-                y = randint(-2 * h, -h)
-                self.enemies.append(gp.Enemy(x, y, x, y + 100, model))
+
+        for _ in range(0 if self.wave < 10 else int(0.8 * self.wave - 8 + randint(-1, 1))):
+            self.enemies.append(gp.BigEnemy(randint(2, 57), randint(-60, -30)))
+        for _ in range(0 if self.wave < 2 else int((px.sqrt(self.wave - 2) if self.wave < 11 else 0.2 * (11 - self.wave) ** 2 + 3) * randint(1, 3) / 2)):
+            self.enemies.append(gp.MediumEnemy(randint(2, 102), randint(-30, -15)))
+        for _ in range(int((-4 / self.wave + 6 if self.wave < 4 else (self.wave + 2) / 3 + 3) * randint(1, 3) / 2)):
+            self.enemies.append(gp.SmallEnemy(randint(2, 106), randint(-22, -11)))
 
 
 settings = ConfigParser(allow_no_value=True, comment_prefixes="/")
