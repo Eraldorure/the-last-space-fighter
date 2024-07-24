@@ -1,39 +1,61 @@
 """File containing classes necessary to the game such as ennemies, bullets, the player, etc."""
 
-import math
-from random import random
-
 import pyxel as px
-import code.functions as fn
+from random import random, choice
+from code import functions as fn
 from code.interface import Hitbox
 
 
 class _Enemy:
-    """Class representing an enemy (of all types).
+    """Class representing an abstract enemy. The distinction between types of enemies is done with subclasses.
     Warning: This class is only used for inheritance purposes. Use one of its subclasses instead."""
 
-    def __init__(self, x: int, y: int, width: int, height: int, hp: int):
-        self.__x = x
-        self.__y = y
+    def __init__(self, x: int, y: int, width: int, height: int, hp: int, skin: int = None):
+        if skin is None:
+            self.skin = choice(self.SKINS)
+        else:
+            self.skin = self.SKINS[skin]
         self.w = width
         self.h = height
-        self.hp = hp
-        self.death_score = hp
-        self.__half_hp = hp // 2 + 1
-        self.speed = 1 / (1.5 + random())
         self.hb = Hitbox(x + 1, y + 1, width - 2, height - 2)  # The hitbox is smaller than the enemy itself to make it more fair
+        self.speed = 1 / (1.2 + random())
+        self.score = hp
+        self.is_dead = False
+        self.hp = hp
+        self.__max_hp = hp
+        self.__x = x
+        self.__y = y
+
+    def draw(self):
+        """Draws the enemy depending on its current skin. The HP bar is also drawn."""
+        if self.is_dead:
+            return
+        px.blt(self.x, self.y, 0, self.skin[0], self.skin[1], self.w, self.h, self.skin[2])
+        diff = self.w // 10
+        px.line(self.x + diff, self.y - 2, fn.remap(0, self.__max_hp, self.x + diff, self.x + self.w - diff, self.hp) - 1, self.y - 2, 8)
 
     def move(self, target_x: int, target_y: int):
         """Moves the enemy towards the point given in the arguments."""
         dist_x = target_x - self.x - self.w // 2
         dist_y = target_y - self.y - self.h // 2
         if abs(dist_x) > abs(dist_y):
-            x = fn.sign(dist_x) * self.speed / 2
+            x = px.sgn(dist_x) * self.speed / 2
             self.__x += x
-            self.hb.x += x
-        y = fn.sign(dist_y) * self.speed
+            self.hb.x = self.x
+        y = px.sgn(dist_y) * self.speed
         self.__y += y
-        self.hb.y += y
+        self.hb.y = self.y
+
+    def hurt(self, damage: int):
+        """Reduces the enemy's HP by the amount given in the arguments."""
+        self.hp -= damage
+        if self.hp <= 0:
+            self.is_dead = True
+
+    def delete(self):
+        """Removes the enemy from the game. Its death will not reward the player any points."""
+        self.is_dead = True
+        self.score = 0
 
     @property
     def x(self):
@@ -43,20 +65,7 @@ class _Enemy:
     def y(self):
         return round(self.__y)
 
-    @property
-    def is_injured(self) -> bool:
-        """Indicates whether the enemy is injured, i.e. if its current HP are below half of its maximum HP."""
-        return self.hp < self.__half_hp
-
-    @property
-    def is_dead(self) -> bool:
-        """Indicates whether the enemy is dead, i.e. if its current HP are equal to or below 0."""
-        return self.hp <= 0
-
-    def delete(self):
-        """Removes the enemy from the game. Its death will not reward the player any points."""
-        self.hp = 0
-        self.death_score = 0
+    SKINS = []
 
 
 class SmallEnemy(_Enemy):
@@ -65,12 +74,7 @@ class SmallEnemy(_Enemy):
     def __init__(self, x: int, y: int):
         super().__init__(x, y, 11, 11, 2)
 
-    def draw(self):
-        """Draws the enemy. Its design changes based on its health."""
-        if self.is_injured:
-            px.blt(self.x, self.y, 0, 20, 0, self.w, self.h, 0)
-        else:
-            px.blt(self.x, self.y, 0, 32, 0, self.w, self.h, 0)
+    SKINS = [(20, 0, 0), (32, 0, 0)]
 
 
 class MediumEnemy(_Enemy):
@@ -78,27 +82,19 @@ class MediumEnemy(_Enemy):
 
     def __init__(self, x: int, y: int):
         super().__init__(x, y, 15, 15, 8)
+        self.speed *= 0.8
 
-    def draw(self):
-        """Draws the enemy. Its design changes based its health."""
-        if self.is_injured:
-            px.blt(self.x, self.y, 0, 60, 0, self.w, self.h, 0)
-        else:
-            px.blt(self.x, self.y, 0, 44, 0, self.w, self.h, 0)
+    SKINS = [(60, 0, 0), (44, 0, 0)]
 
 
-class BigEnemy(_Enemy):
-    """Class representing a big enemy."""
+class LargeEnemy(_Enemy):
+    """Class representing a large enemy."""
 
     def __init__(self, x: int, y: int):
         super().__init__(x, y, 30, 30, 32)
+        self.speed *= 0.6
 
-    def draw(self):
-        """Draws the enemy. Its design changes based on its health."""
-        if self.is_injured:
-            px.blt(self.x, self.y, 0, 31, 104, self.w, self.h, 11)
-        else:
-            px.blt(self.x, self.y, 0, 31, 73, self.w, self.h, 11)
+    SKINS = [(0, 73, 11), (31, 73, 11), (0, 104, 11), (31, 104, 11)]
 
 
 # + Boss class: hp=96 w=48 h=44 full=102,0 low=151,0 bg=0
@@ -119,6 +115,10 @@ class Bullet:
         self.step = 2 * fn.t_step(x, y, dir_x, dir_y)
         self.is_deleted = False
 
+    def draw(self):
+        """Draws the bullet."""
+        px.pset(self.x, self.y, self.col)
+
     def move(self):
         """Moves the bullet in the direction defined during instanciation."""
         self.x, self.y = fn.lerp_pts(self.__ox, self.__oy, self.__dx, self.__dy, self.t)
@@ -127,11 +127,6 @@ class Bullet:
     def delete(self):
         """Marks the bullet as deleted, meaning it will be removed from the list of bullets in the main loop."""
         self.is_deleted = True
-        self.col = 2
-
-    def draw(self):
-        """Draws the bullet."""
-        px.pset(self.x, self.y, self.col)
 
 
 class Player:

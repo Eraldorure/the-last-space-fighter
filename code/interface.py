@@ -1,7 +1,7 @@
 """The file containing all the ui elements (such as buttons)."""
 
 import pyxel as px
-import code.functions as fn
+from code.functions import cut_max_text_width
 
 
 class Hitbox:
@@ -79,10 +79,10 @@ class Text:
             raise ValueError("invalid vertical alignment, choose between 'top', 'center' and 'bottom'")
 
         if max_width is not None:
-            lines = fn.cut_max_text_width(text, (max_width + 1) // 4)
+            lines = cut_max_text_width(text, (max_width + 1) // 4)
         else:
             lines = text.splitlines()
-        self._txt = text
+        self.__txt = text
         self.w = 0
         self.h = len(lines) * 6 - 1
 
@@ -102,7 +102,7 @@ class Text:
                 self.w = line.w
 
     def __str__(self):
-        return self._txt
+        return self.__txt
 
     def draw(self, color: int = 7):
         """Draws the text. The default color is white."""

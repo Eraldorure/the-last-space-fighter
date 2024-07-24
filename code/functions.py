@@ -33,21 +33,6 @@ def t_step(xa: int, ya: int, xb: int, yb: int) -> float:
     return 1 / math.sqrt((xb - xa) ** 2 + (yb - ya) ** 2)
 
 
-def shorten_version(version: str, level: int) -> str:
-    """Shortens the version string to the specified level."""
-
-    temp = version.split(".")
-    for i in range(1, len(temp)):
-        temp[i] = "." + temp[i]
-    if "-" in temp[-1]:
-        temp.extend(temp.pop().split("-", 1))
-        temp[-1] = "-" + temp[-1]
-    if "+" in temp[-1]:
-        temp.extend(temp.pop().split("+", 1))
-        temp[-1] = "+" + temp[-1]
-    return "".join(temp[:level])
-
-
 def cut_max_text_width(text: str, max_width: int) -> list[str]:
     """Cuts the text to fit the specified width in multiple lines without cutting words while respecting line breaks.
     Returns a list containing all the lines."""
@@ -66,12 +51,6 @@ def cut_max_text_width(text: str, max_width: int) -> list[str]:
                     temp = word + " "
             lines.append(temp.rstrip())
     return lines
-
-
-def sign(number: float) -> int:
-    """Returns the sign of the number (-1, 0 or 1)."""
-
-    return (number > 0) - (number < 0)
 
 
 if __name__ == '__main__':  # Test zone

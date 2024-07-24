@@ -10,11 +10,7 @@ Your goal, as a player, is to simply get the best score possible.
 ### Gameplay
 
 Contrary to a regular Space Fighter, the player can move in all directions using the WASD keys (or ZQSD if you're a fellow Azerty user).
-
 To shoot, you simply need to left-click (no need to spam, keep holding works just as well).
-The player has a limited amount of ammunition, represented by a gauge at the bottom right of the screen.
-As soon as the gauge is empty, the player will have to wait for it to refill before being able to shoot again.
-The amount of ammunition is 10, increases by 5 every wave and stops growing at 99.
 
 You have 3 lives, but colliding with an enemy will remove one of them.
 The game is over as soon as you lose all your lives, and you will have to restart from the beginning.
@@ -22,20 +18,20 @@ The game is over as soon as you lose all your lives, and you will have to restar
 ### Scoring system
 
 The scoring system follows these few rules:
-- You gain 100 every time you go on to the next wave.
-- No points are removed when you lose a life (aka when you are touched by an enemy).
+- You gain 100 points every time you go on to the next wave.
 - When an enemy is killed, the amount of points you gain is equivalent to the enemy's initial HP.  
   *Enemies who touch you are automatically removed and award you no points.*
+- No points are removed when you lose a life (aka when you are touched by an enemy).
 
 
 ### Minimum requirements
 
-To play this game, you will need:
+It isn't necessary to have an overpowered computer to run this game. A potato PC should suffice.
+
+However, you will still need a few things for it to work:
 - [Python](https://www.python.org/downloads/) (unknown minium version, but assuredly works with 3.10 and higher)
 - [Pyxel](https://pypi.org/project/pyxel/) version 2.1.4 or higher (installable using the `pip install -U pyxel` command)
 - A mouse and a keyboard; controllers aren't (yet?) supported
-
-Of course, it isn't necessary to have an overpowered computer to run this game. A potato PC should suffice.
 
 
 ## Development
@@ -44,8 +40,8 @@ Of course, it isn't necessary to have an overpowered computer to run this game. 
 
 The current roadmap is the following (subject to change):
 - `v1.0`: Current version of the game, with a relatively simple gameplay.
-- `v1.1`: Option customization, pause screens and local leaderboards.
-- `v1.2`: Sound system (SFX and potentially music).
+- `v1.1`: Further customization, pause screens and local leaderboards.
+- `v1.2`: Visual effects, sound effects and potentially music.
 - `v1.3`: Boss fights and buff/debuffs.
 
 ### Bugs and ideas
