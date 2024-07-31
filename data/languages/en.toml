@@ -43,6 +43,11 @@ cancel = "Cancel"
     lang = "Language"
     lang_select = {"en" = "English", "fr" = "French"}
 
+    [options.update]
+    check = "Check for updates..."
+    popup_yes = {msg = "An update is available. Do you wish to install it?", yes = "Yes", no = "No"}
+    popup_no = {msg = "No updates available.", ok = "OK"}
+
 
 [license]
 

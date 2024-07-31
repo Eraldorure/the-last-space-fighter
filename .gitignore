@@ -1,3 +1,9 @@
+[Folders]
 .idea/
+venv/
+
+[Extensions]
 *.pyc
-_tests.py
+
+[Files]
+tests.py

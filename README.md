@@ -10,7 +10,7 @@ Your goal, as a player, is to simply get the best score possible.
 ### Gameplay
 
 Contrary to a regular Space Fighter, the player can move in all directions using the WASD keys (or ZQSD if you're a fellow Azerty user).
-To shoot, you simply need to left-click (no need to spam, keep holding works just as well).
+To shoot, you simply need to left-click (no need to spam, holding down works just as well).
 
 You have 3 lives, but colliding with an enemy will remove one of them.
 The game is over as soon as you lose all your lives, and you will have to restart from the beginning.
@@ -20,7 +20,7 @@ The game is over as soon as you lose all your lives, and you will have to restar
 The scoring system follows these few rules:
 - You gain 100 points every time you go on to the next wave.
 - When an enemy is killed, the amount of points you gain is equivalent to the enemy's initial HP.  
-  *Enemies who touch you are automatically removed and award you no points.*
+- Enemies who touch you are automatically removed and award you no points.
 - No points are removed when you lose a life (aka when you are touched by an enemy).
 
 
@@ -29,9 +29,9 @@ The scoring system follows these few rules:
 It isn't necessary to have an overpowered computer to run this game. A potato PC should suffice.
 
 However, you will still need a few things for it to work:
-- [Python](https://www.python.org/downloads/) (unknown minium version, but assuredly works with 3.10 and higher)
-- [Pyxel](https://pypi.org/project/pyxel/) version 2.1.4 or higher (installable using the `pip install -U pyxel` command)
-- A mouse and a keyboard; controllers aren't (yet?) supported
+- [Python](https://www.python.org/downloads/) version 3.11 or higher with at least *pip* and *venv* installed
+- An internet connection to download the necessary libraries (only for the first launch) or to update the game
+- A mouse and a keyboard since controllers aren't (yet?) supported
 
 
 ## Development
@@ -59,5 +59,19 @@ This project belongs to:
 #### Licensing
 
 This game is licensed under the GNU General Public License v3.0 (or GPLv3).
-This means that you can freely use, modify and distribute this game, as long as you respect the license's terms, which are, in short: credit where credit is due, and keep the same license for your modifications.
-For more details, you can read the full license in the [LICENSE](https://raw.githubusercontent.com/Eraldorure/the-last-space-fighter/main/LICENSE) file.
+The full license can be found in the [LICENSE](https://raw.githubusercontent.com/Eraldorure/the-last-space-fighter/main/LICENSE) file.
+
+    Copyright (C) 2024  Thibaud C. and Romain G.
+    
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.

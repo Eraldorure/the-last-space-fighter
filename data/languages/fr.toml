@@ -43,6 +43,11 @@ cancel = "Annuler"
     lang = "Langue"
     lang_select = {"en" = "Anglais", "fr" = "Francais"}
 
+    [options.update]
+    check = "Verifier les mises a jour..."
+    popup_yes = {msg = "Une mise a jour est disponible. Souhaitez-vous l'installer ?", yes = "Oui", no = "Non"}
+    popup_no = {msg = "Aucune mise a jour disponible.", ok = "OK"}
+
 
 [license]
 
@@ -52,7 +57,7 @@ p2 = """
 Vous etes libre d'utiliser, modifier et partager ce jeu tant que vous respectez les termes de la licence, soit :
 - Creditez les auteurs d'origine ;
 - Conservez la meme licence."""
-p3 = "Pour davantage d'informations, vous pouvez consulter le fichier LICENSE."
+p3 = "Pour davantage d'informations, veuillez consulter le fichier LICENSE."
 yes = "J'accepte"
 no = "Refuser"
 see_lic = "Voir la licence"

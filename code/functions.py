@@ -1,6 +1,7 @@
 """A few small functions used throughout the project."""
 
 import math
+from typing import Any, Iterable
 
 
 def lerp(a: float, b: float, t: float) -> float:
@@ -53,5 +54,21 @@ def cut_max_text_width(text: str, max_width: int) -> list[str]:
     return lines
 
 
-if __name__ == '__main__':  # Test zone
-    print(cut_max_text_width("Hey!\nThis is a test to see if the function works properly.\nThe good thing is that is apparently does!", 25))
+def set_seq_length(seq: Iterable, value: Any, length: int) -> Iterable:
+    """Sets the length of a sequence to the specified length by adding the specified value at the end. If the sequence
+    is already longer than the specified length, it will be truncated. Returns the new sequence as a generator."""
+
+    i = 0
+    for el in seq:
+        i += 1
+        yield el
+        if i == length:
+            break
+    while i < length:
+        i += 1
+        yield value
+
+
+if __name__ == '__main__':
+    print(*set_seq_length([1, 2, 3], 0, 5))
+    print(*set_seq_length([1, 2, 3, 4, 5], 0, 3))
