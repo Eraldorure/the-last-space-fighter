@@ -6,13 +6,11 @@ import sys
 import subprocess
 from configparser import ConfigParser
 from shutil import rmtree
-from code import Version
 
 if os.name == "nt":
     import ctypes
     from locale import windows_locale
 
-PY_VERSION = Version(3, 11, 0)  # Minimum Python version required
 CORE_COMPONENTS = ["pip", "venv"]  # Things that can be executed with `python -m <...>`
 PACKAGES = ["pyxel", "requests"]  # Required dependencies
 LANGUAGES = ["en", "fr"]  # Unsupported languages will fall back to 'en'
@@ -21,10 +19,10 @@ LANGUAGES = ["en", "fr"]  # Unsupported languages will fall back to 'en'
 def check_python_components(executable: str):
     """Checks if the required components (Python, pip and venv) are installed. If not, exists the program while printing
     an error message.
-    The executable argument is the path to the Python executable that is going to get checked."""
+    The 'executable' argument is the path to the Python executable that is going to get checked."""
 
-    if Version(sys.version_info.major, sys.version_info.minor, sys.version_info.serial) < PY_VERSION:  # Check Python
-        print(f"ERROR: Please use Python {PY_VERSION.shorten_str(2)} or higher.", file=sys.stderr)
+    if sys.version_info.major < 3 and sys.version_info.minor < 11:  # Check Python (must be 3.11 or later)
+        print(f"ERROR: Please use Python 3.11 or higher.", file=sys.stderr)
         sys.exit(1)
 
     for component in CORE_COMPONENTS:  # Check other required core components
