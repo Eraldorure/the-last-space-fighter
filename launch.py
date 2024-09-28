@@ -16,7 +16,7 @@ PACKAGES = ["pyxel", "requests"]  # Required dependencies
 LANGUAGES = ["en", "fr"]  # Unsupported languages will fall back to 'en'
 
 
-def check_python_components(executable: str):
+def check_python_components(executable: str = sys.executable):
     """Checks if the required components (Python, pip and venv) are installed. If not, exists the program while printing
     an error message.
     The 'executable' argument is the path to the Python executable that is going to get checked."""
@@ -33,7 +33,7 @@ def check_python_components(executable: str):
             sys.exit(1)
 
 
-def install_requirements(executable: str):
+def install_requirements(executable: str = sys.executable):
     """Installs all the required dependencies for the game.
     The 'executable' argument is the path to the Python executable to use for the installation."""
 
@@ -74,7 +74,7 @@ if config["info"]["first_launch"] == "yes":
     check_remnants()
 
     print("Checking core components...")
-    check_python_components(sys.executable)
+    check_python_components()
 
     print("Creating virtual environment...")
     subprocess.run([sys.executable, "-m", "venv", "venv"])
@@ -97,4 +97,5 @@ except FileNotFoundError:
     config["info"]["first_launch"] = "yes"
     with open("./data/config.ini", "w") as file:
         config.write(file)
+    input("Press enter to exit...")
     sys.exit(1)

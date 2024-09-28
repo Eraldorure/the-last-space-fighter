@@ -44,7 +44,7 @@ class App:
     """The class tying all the other classes (aka pages or screens) so that it works as a unique application.
     This class is also the one running the Pyxel instance."""
 
-    def __init__(self, skip_eula: bool = False):  # Arguments are for debug purposes only
+    def __init__(self, *, skip_eula: bool = False):  # Arguments are for debug purposes only
         self.game_over = GameOver(0, 0)
         self.menu = Menu()
         self.credits = Credits()
@@ -60,7 +60,7 @@ class App:
         """Launches the Pyxel instance, and thus the game."""
         px.init(128, 128, title="The Last Space Fighter", fps=60)
         px.icon(["000000000", "000060000", "000070000", "B0076700B", "7067C7607", "796525697", "202999202", "000505000", "000000000"], 5, 0)
-        px.load("./data/resources.pyxres")
+        px.load("./data/assets.pyxres")
         px.mouse(True)
         px.run(self.update, self.draw)
 
@@ -92,7 +92,6 @@ class Menu:
     def __init__(self):
         content = lang["menu"]
         self.btn_play = ui.Button(41, 69, 47, 13, content["play"])
-
         self.btn_options = ui.ClickableText(64, 87, content["options"], h_align="center")
         self.btn_credits = ui.ClickableText(4, 124, up.Version.from_str(settings["info"]["version"]).shorten_str(2), v_align="bottom")
         self.btn_quit = ui.ClickableText(124, 124, content["exit"], h_align="right", v_align="bottom")
@@ -362,7 +361,7 @@ class Game:
             self.enemies.append(gp.LargeEnemy(randint(2, 57), randint(-60, -30)))
         for _ in range(int(1.5 - 1.5 * px.cos(25 * self.wave) + self.wave / randint(8, 16))):
             self.enemies.append(gp.MediumEnemy(randint(2, 102), randint(-30, -15)))
-        for _ in range(int(6 - 8 / (self.wave + 1))):
+        for _ in range(int(6 - 9 / (self.wave + 1))):
             self.enemies.append(gp.SmallEnemy(randint(2, 106), randint(-22, -11)))
 
 

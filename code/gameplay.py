@@ -92,7 +92,7 @@ class LargeEnemy(_Enemy):
 
     def __init__(self, x: int, y: int):
         super().__init__(x, y, 30, 30, 32)
-        self.speed *= 0.6
+        self.speed *= 0.7
 
     SKINS = [(0, 73, 11), (31, 73, 11), (0, 104, 11), (31, 104, 11)]
 
