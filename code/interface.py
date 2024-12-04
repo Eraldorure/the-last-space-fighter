@@ -37,8 +37,20 @@ class Hitbox:
         """Indicates if two coordinates x and y are situated inside the hitbox."""
         return self.x <= x < self.x + self.w and self.y <= y < self.y + self.h
 
+    def refresh(self, x: int = None, y: int = None, width: int = None, height: int = None):
+        """Refreshes the hitbox with new dimension values. Useful for easily moving a hitbox alongside its container.
+        When values are set to None, they stay the same and are not changed."""
+        if x is not None:
+            self.x = x
+        if y is not None:
+            self.y = y
+        if width is not None:
+            self.w = width
+        if height is not None:
+            self.h = height
+
     def draw(self, col: int):
-        """Method to draw the hitbox. To be used for debugging purposes."""
+        """Method to draw the hitbox. To be used for debugging purposes only."""
         px.rect(self.x, self.y, self.w, self.h, col)
 
 
@@ -120,7 +132,7 @@ class Text:
             if line.w > self.w:
                 self.x = line.x
                 self.w = line.w
-        self.hb = Hitbox(self.x, self.y, self.w, self.h)
+        self.hb.refresh(self.x, self.y, self.w, self.h)
 
     def draw(self, color: int = 7):
         """Draws the text. The default color is white."""
@@ -271,64 +283,57 @@ class DropdownSelector:
 
 class Popup:
     """A class representing a popup window.
-    It is used to display messages to the user as well as confirmation window."""
+    It is used to display messages to the user such as confirmation windows."""
 
     mouse_over = Button.mouse_over
 
-    def __init__(self, x: int, y: int, width: int, height: int, message: str, *,
-                 option_l: str = "", option_r: str = "OK", show: bool = False):
+    def __init__(self, x: int, y: int, width: int):
         """The 'option_l' and 'option_r' arguments allows the user to customize the text of the buttons. If an empty
         string is given, the button will not be displayed.
         The 'show' parameter allows the Popup to be visible or not after instanciation."""
         self.x = x
         self.y = y
+        self._center_y = y - 12
         self.w = width
-        self.h = height
-        self.visible = show
-        self.msg = Text(x + 5, y + 5, message, width - 10)
-        self.btn_l = Button2(x + 5, y + height - 14, 31, 9, option_l) if option_l else None
-        self.btn_r = Button2(x + width - 36, y + height - 14, 31, 9, option_r) if option_r else None
-        self.hb = Hitbox(x, y, width, height)
+        self.h = 19
+        self.visible = False
+        self.txt = None
+        self.btn1 = None
+        self.btn2 = None
+        self.hb = Hitbox(x, y, width, 19)
 
-    def toggle(self):
+    def trigger(self, message: str, option1: str, option2: str = None):
+        """Sets the message and button options and makes the popup visible."""
+        self.txt = Text(self.x + 5, self._center_y + 5, message, self.w - 10, v_align="center")
+        self.h = self.txt.h + 24
+        self.y = self.txt.y - 5
+        self.btn1 = Button2(self.x + self.w - 36, self.y + self.h - 14, 31, 9, option1)
+        self.btn2 = Button2(self.x + 5, self.y + self.h - 14, 31, 9, option2) if option2 else None
+        self.hb.refresh(y=self.y, height=self.h)
+        self.visible = True
+
+    def hide(self):
         """Toggles the visibility of the popup window."""
-        self.visible = not self.visible
+        self.visible = False
 
-    def set_options(self, option_l: str | None = None, option_r: str | None = None):
-        """Changes the text of the buttons.
-        Give an empty string to hide the button, or None to keep the previous text."""
-        if option_l == "":
-            self.btn_l = None
-        elif option_l is not None:
-            if self.btn_l is None:
-                self.btn_l = Button2(self.x + 5, self.y + self.h - 14, 31, 9, option_l)
-            else:
-                self.btn_l.txt.set_content(option_l)
+    def is_btn1_pressed(self, key=px.MOUSE_BUTTON_LEFT) -> bool:
+        """Returns the pressed status of the first button."""
+        return self.btn1.is_pressed(key)
 
-        if option_r == "":
-            self.btn_r = None
-        elif option_r is not None:
-            if self.btn_r is None:
-                self.btn_r = Button2(self.x + self.w - 36, self.y + self.h - 14, 31, 9, option_r)
-            else:
-                self.btn_r.txt.set_content(option_l)
-
-    def update(self):
-        """Updates the popup window."""
-        if self.visible:
-            if px.btnp(px.MOUSE_BUTTON_LEFT) and not self.mouse_over() or \
-                    self.btn_l is not None and self.btn_l.is_pressed() or \
-                    self.btn_r is not None and self.btn_r.is_pressed():
-                self.visible = False
+    def is_btn2_pressed(self, key=px.MOUSE_BUTTON_LEFT) -> bool:
+        """Returns the pressed status of the second button.
+        Returns False if said button isn't defined (aka set to None)."""
+        if self.btn2 is None:
+            return False
+        return self.btn2.is_pressed(key)
 
     def draw(self):
         """Draws the popup window."""
-        if not self.visible:
+        if not self.visible or self.txt is None or self.btn1 is None:
             return
         px.rect(self.x, self.y, self.w, self.h, 1)
         px.rectb(self.x, self.y, self.w, self.h, 6)
-        self.msg.draw()
-        if self.btn_l is not None:
-            self.btn_l.draw()
-        if self.btn_r is not None:
-            self.btn_r.draw()
+        self.txt.draw()
+        self.btn1.draw()
+        if self.btn2 is not None:
+            self.btn2.draw()

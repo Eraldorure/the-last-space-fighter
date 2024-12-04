@@ -195,22 +195,24 @@ class Options:
         self.drop_lang = ui.DropdownSelector(64, 18, content["lang"]["lang_select"], settings["options"]["language"])
 
         self.btn_check = ui.ClickableText(124, 110, content["update"]["check"], h_align="right", v_align="bottom")
-        self.popup_yes = ui.Popup(14, 40, 100, 48, content["update"]["popup_yes"]["msg"],
-                                  option_l=content["update"]["popup_yes"]["no"], option_r=content["update"]["popup_yes"]["yes"])
-        self.popup_no = ui.Popup(14, 46, 100, 36, content["update"]["popup_no"]["msg"],
-                                 option_r=content["update"]["popup_no"]["ok"])
+        self.popup = ui.Popup(14, 64, 100)
         self.updater = up.Updater(up.Version.from_str(settings["info"]["version"]))
 
         self.btn_apply = ui.ClickableText(124, 124, content["apply"], h_align="right", v_align="bottom")
         self.btn_cancel = ui.ClickableText(4, 124, content["cancel"], v_align="bottom")
 
     def update(self):
-        if self.popup_yes.visible:
-            self.popup_yes.update()
-            if self.popup_yes.btn_r.is_pressed():
-                self.updater.install_update()
-        elif self.popup_no.visible:
-            self.popup_no.update()
+        if self.popup.visible:
+            if self.updater.update_available and self.popup.is_btn1_pressed():
+                out, err = self.updater.install_update()
+                if out:
+                    self.popup.trigger(*lang["options"]["update"]["pop_success"])
+                else:
+                    content = lang["options"]["update"]["pop_fail"]
+                    self.popup.trigger(content[0].format(ERR_MSG=str(err)), content[1])
+            elif self.popup.is_btn2_pressed() or self.popup.is_btn1_pressed():
+                self.popup.hide()
+
         elif self.btn_cancel.is_pressed():
             app.screen = app.menu
             app.options = Options()
@@ -218,11 +220,12 @@ class Options:
             update_settings(("options", "language", self.drop_lang.selected))
             app.reload()
             app.screen = app.menu
+
         elif self.btn_check.is_pressed():
-            if self.updater.check_updates():
-                self.popup_yes.toggle()
+            if self.updater.update_available:
+                self.popup.trigger(*lang["options"]["update"]["pop_yes"])
             else:
-                self.popup_no.toggle()
+                self.popup.trigger(*lang["options"]["update"]["pop_no"])
         else:
             self.drop_lang.update()
 
@@ -233,8 +236,7 @@ class Options:
         self.txt_lang.draw()
         self.drop_lang.draw()
         self.btn_check.draw()
-        self.popup_yes.draw()
-        self.popup_no.draw()
+        self.popup.draw()
         px.line(4, 114, 123, 114, 5)
         self.btn_apply.draw()
         self.btn_cancel.draw()

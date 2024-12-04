@@ -45,8 +45,10 @@ cancel = "Annuler"
 
     [options.update]
     check = "Verifier les mises a jour..."
-    popup_yes = {msg = "Une mise a jour est disponible. Souhaitez-vous l'installer ?", yes = "Oui", no = "Non"}
-    popup_no = {msg = "Aucune mise a jour disponible.", ok = "OK"}
+    pop_yes = ["Une mise a jour est disponible. Souhaitez-vous l'installer ?", "Oui", "Non"]
+    pop_no = ["Aucune mise a jour disponible.", "OK"]
+    pop_success = ["Mise a jour correctement installee", "Quitter"]
+    pop_fail = ["La mise a jour a echoue avec l'erreur : '{ERR_MSG}'.\nLe jeu peut etre corrompu, veuillez le reinstaller.", "Quitter"]
 
 
 [license]

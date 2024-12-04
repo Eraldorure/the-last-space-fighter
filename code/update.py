@@ -86,6 +86,7 @@ class Updater:
         self.current = current_version
         self.latest = None
         self.temp_dir = None
+        self.check_updates()
 
     def check_updates(self, accept_prerelease: bool = False) -> bool:
         """Checks for updates in the releases on the game's GitHub repository.
@@ -100,17 +101,22 @@ class Updater:
                 return True
         return False
 
-    def install_update(self) -> bool:
+    def install_update(self) -> tuple[bool, Exception | None]:
         """Installs the latest update available.
         Returns True if the update has been successfully installed, and False otherwise."""
         if self.latest is None and not self.check_updates():
-            return False
-        self.temp_dir = mkdtemp()
-        self.__download_pkg()
-        self.__replace_files()
-        shutil.rmtree(self.temp_dir)
-        self.temp_dir = None
-        return True
+            return False, None
+        try:
+            self.temp_dir = mkdtemp()
+            self.__download_pkg()
+            self.__replace_files()
+            self.latest = None
+        except Exception as e:
+            return False, e
+        finally:
+            shutil.rmtree(self.temp_dir)
+            self.temp_dir = None
+        return True, None
 
     def __download_pkg(self) -> int:
         """Downloads the update package to the temporary folder. Returns the downloaded package's size."""
@@ -133,6 +139,10 @@ class Updater:
         commit = os.listdir(self.temp_dir)[0]
         for el in os.listdir(f"{self.temp_dir}/{commit}"):
             shutil.move(f"{self.temp_dir}/{commit}/{el}", f"{game_dir}/{el}")
+
+    @property
+    def update_available(self):
+        return self.latest is not None
 
     URL = "https://api.github.com/repos/Eraldorure/the-last-space-fighter/releases"
 
