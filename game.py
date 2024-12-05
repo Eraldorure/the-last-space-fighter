@@ -202,15 +202,23 @@ class Options:
         self.btn_cancel = ui.ClickableText(4, 124, content["cancel"], v_align="bottom")
 
     def update(self):
-        if self.popup.visible:
-            if self.updater.update_available and self.popup.is_btn1_pressed():
-                out, err = self.updater.install_update()
-                if out:
-                    self.popup.trigger(*lang["options"]["update"]["pop_success"])
-                else:
-                    content = lang["options"]["update"]["pop_fail"]
-                    self.popup.trigger(content[0].format(ERR_MSG=str(err)), content[1])
-            elif self.popup.is_btn2_pressed() or self.popup.is_btn1_pressed():
+        if self.popup.visible:    # WARNING: Update WILL fail if run in a git-tracked environment or inside a venv
+            if self.popup.is_btn1_pressed():
+                match self.popup.id:
+                    case "yes":
+                        out, err = self.updater.install_update()
+                        if out:
+                            self.popup.trigger("success", *lang["options"]["update"]["pop_success"])
+                        else:
+                            content = lang["options"]["update"]["pop_fail"]
+                            self.popup.trigger("fail", content[0].format(ERR_MSG=str(err)), content[1])
+                    case "no":
+                        self.popup.hide()
+                    case "success":
+                        px.quit()
+                    case "fail":
+                        px.quit()
+            elif self.popup.is_btn2_pressed():
                 self.popup.hide()
 
         elif self.btn_cancel.is_pressed():
@@ -222,10 +230,10 @@ class Options:
             app.screen = app.menu
 
         elif self.btn_check.is_pressed():
-            if self.updater.update_available:
-                self.popup.trigger(*lang["options"]["update"]["pop_yes"])
+            if self.updater.check_updates():
+                self.popup.trigger("yes", *lang["options"]["update"]["pop_yes"])
             else:
-                self.popup.trigger(*lang["options"]["update"]["pop_no"])
+                self.popup.trigger("no", *lang["options"]["update"]["pop_no"])
         else:
             self.drop_lang.update()
 

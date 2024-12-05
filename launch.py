@@ -76,11 +76,12 @@ if config["info"]["first_launch"] == "yes":
     print("Checking core components...")
     check_python_components()
 
-    print("Creating virtual environment...")
-    subprocess.run([sys.executable, "-m", "venv", "venv"])
+    # print("Creating virtual environment...")
+    # subprocess.run([sys.executable, "-m", "venv", "venv"])
 
     print("Installing required dependencies...")
-    install_requirements(venv_exec)
+    install_requirements()
+    # install_requirements(venv_exec)
 
     print("Checking system language...")
     config["options"]["language"] = get_system_language()
@@ -91,7 +92,8 @@ if config["info"]["first_launch"] == "yes":
     print("Setup complete.")
 
 try:
-    subprocess.run([venv_exec, "game.py"])
+    # subprocess.run([venv_exec, "game.py"])
+    subprocess.run([sys.executable, "game.py"])
 except FileNotFoundError:
     print("ERROR: The virtual environment was not found. Please run the launch.py script again to fix the issue.", file=sys.stderr)
     config["info"]["first_launch"] = "yes"

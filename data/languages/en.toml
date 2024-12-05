@@ -47,7 +47,7 @@ cancel = "Cancel"
     check = "Check for updates..."
     pop_yes = ["An update is available. Do you wish to install it?", "Yes", "No"]
     pop_no = ["No updates available.", "OK"]
-    pop_success = ["Update installed successfully", "Exit"]
+    pop_success = ["Update installed successfully.", "Exit"]
     pop_fail = ["Update failed with message '{ERR_MSG}'.\nInstallation may be compromised, please reinstall the game.", "Exit"]
 
 

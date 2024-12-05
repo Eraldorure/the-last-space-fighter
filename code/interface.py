@@ -301,9 +301,12 @@ class Popup:
         self.btn1 = None
         self.btn2 = None
         self.hb = Hitbox(x, y, width, 19)
+        self.id = None
 
-    def trigger(self, message: str, option1: str, option2: str = None):
-        """Sets the message and button options and makes the popup visible."""
+    def trigger(self, identifier, message: str, option1: str, option2: str = None):
+        """Sets the message and button options and makes the popup visible. Use the identifier parameter to specify
+        which popup this is, which can be useful when dealing with multiple popups at once."""
+        self.id = identifier
         self.txt = Text(self.x + 5, self._center_y + 5, message, self.w - 10, v_align="center")
         self.h = self.txt.h + 24
         self.y = self.txt.y - 5

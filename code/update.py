@@ -80,13 +80,13 @@ class Version:
 
 
 class Updater:
-    """Class that handles the version checking and updating of the game."""
+    """Class that handles the version checking and updating of the game.
+    WARNING: Update WILL fail if run in a git-tracked environment or inside a venv."""
 
     def __init__(self, current_version: Version):
         self.current = current_version
         self.latest = None
-        self.temp_dir = None
-        self.check_updates()
+        self.__temp_dir = None
 
     def check_updates(self, accept_prerelease: bool = False) -> bool:
         """Checks for updates in the releases on the game's GitHub repository.
@@ -102,47 +102,45 @@ class Updater:
         return False
 
     def install_update(self) -> tuple[bool, Exception | None]:
-        """Installs the latest update available.
-        Returns True if the update has been successfully installed, and False otherwise."""
+        """Installs the latest update available. Can return the following:
+        - True, None: Installation completed successfully
+        - False, None: No updates available
+        - True, Exception: Installation failed (the second element being the encountered error)"""
         if self.latest is None and not self.check_updates():
             return False, None
         try:
-            self.temp_dir = mkdtemp()
+            self.__temp_dir = mkdtemp()
             self.__download_pkg()
             self.__replace_files()
             self.latest = None
         except Exception as e:
             return False, e
         finally:
-            shutil.rmtree(self.temp_dir)
-            self.temp_dir = None
+            shutil.rmtree(self.__temp_dir)
+            self.__temp_dir = None
         return True, None
 
     def __download_pkg(self) -> int:
         """Downloads the update package to the temporary folder. Returns the downloaded package's size."""
-        if self.temp_dir is None:
+        if self.__temp_dir is None:
             raise ValueError("the temporary directory has not been created.")
-        with open(self.temp_dir + "/update.zip", "wb") as file:
+        with open(self.__temp_dir + "/update.zip", "wb") as file:
             size = file.write(requests.get(self.latest["zipball_url"], allow_redirects=True).content)
-        shutil.unpack_archive(self.temp_dir + "/update.zip", self.temp_dir)
+        shutil.unpack_archive(self.__temp_dir + "/update.zip", self.__temp_dir)
         return size
 
     def __replace_files(self, game_dir: str = os.getcwd()):
-        if self.temp_dir is None:
+        """Completely removes the current game files and replaces them with the extracted new ones."""
+        if self.__temp_dir is None:
             raise ValueError("the temporary directory has not been created.")
-        """Completely removes the current game files."""
         for el in os.listdir(game_dir):
             if os.path.isfile(el):
                 os.remove(el)
             else:
                 shutil.rmtree(el)
-        commit = os.listdir(self.temp_dir)[0]
-        for el in os.listdir(f"{self.temp_dir}/{commit}"):
-            shutil.move(f"{self.temp_dir}/{commit}/{el}", f"{game_dir}/{el}")
-
-    @property
-    def update_available(self):
-        return self.latest is not None
+        commit = os.listdir(self.__temp_dir)[0]
+        for el in os.listdir(f"{self.__temp_dir}/{commit}"):
+            shutil.move(f"{self.__temp_dir}/{commit}/{el}", f"{game_dir}/{el}")
 
     URL = "https://api.github.com/repos/Eraldorure/the-last-space-fighter/releases"
 
